@@ -1,6 +1,6 @@
 # Channelize JavaScript Widget UI kit
-This is a ready to use UI kit of Channelize chat application.
-It uses [Channelize JS-SDK](https://docs.channelize.io/javascript-sdk-introduction-overview) internally to provide end to end chat support. It provide highly customization in UI as well as functions.
+
+This contains the customization capabilities you can achieve by using our JavaScript Sample App created using our [JavaScript SDK](https://docs.channelize.io/javascript-sdk-introduction-overview). This Sample App allows you to add a customized chat widget / docked layout on your website.
 
 ### Features : ###
 - Highly customization
@@ -8,13 +8,15 @@ It uses [Channelize JS-SDK](https://docs.channelize.io/javascript-sdk-introducti
 - Ready to use
 - Multiple use cases
 
-##### You can also check out our demo [here](https://demo.channelize.io).
+#### You can also check out our demo [here](https://demo.channelize.io).
 
 ## Getting Started
 
+Follow the below steps to add Channelize widget / docked layout on your website.
+
 ##### Step 1: Add widget #####
 
-You must add the channelize widget div in the body tag of your website.
+Add the Channelize widget div in the body tag of your website.
   
 ```html
 <body>
@@ -24,7 +26,7 @@ You must add the channelize widget div in the body tag of your website.
 
 ##### Step 2: Import Channelize widget file #####
 
-Import the `widget.Channelize.js` file after body tag.
+Import the `widget.Channelize.js` file after body tag in your website.
 
 ```javascript
 <script src="https://cdn.channelize.io/apps/web-widget/1.0.0/widget.Channelize.js"></script>
@@ -40,7 +42,7 @@ Import the [`Channelize JS-SDK`](https://docs.channelize.io/javascript-sdk-intro
 
 ##### Step 4: Create widget object #####
 
-Create widget object and call the load function which takes public key as an argument.
+Create widget object and call the load function which will require your public key as an argument.
 
 ```javascript
 <script>
@@ -50,12 +52,10 @@ Create widget object and call the load function which takes public key as an arg
 ```
 
 ## Customizing the widget
-You can also customize the widget according to your website. We also provide some predefine variables for UI customization, along with this you can also change UI of any content in the code.
-You can create your JS functions and add those in any event listener or function for advanced customization.
 
-> Require Node v8.x+ installed.
+> Pre-requisites: Have Node v8.x+ installed.
 
-1. Update Channelize widget file URL in index.html file.
+1. Update Channelize widget file URL in your index.html file.
 ```javascript
 <script src="./dist/widget.Channelize.js"></script>
 ```
@@ -75,18 +75,18 @@ npm run build
 npm start
 ```
 
-###### UI Customization : ######
+###### For UI Customizations : ######
 
-1. We have defined some variables to modify colours and position of main UI contents. So you can change those values in ./web-widget/src/scss/variables.scss file.
-
-2. You can also update the UI of any content by changing in their code.
-
-###### Function Customization : ######
-
-1. You can add your functions or can make code level changes in functions.
+- Customize the UI of widget / docked layout as per your choice by changing the values of predefined variables in `./web-widget/src/scss/variables.scss file` or by making changes in the code of the elements/content.
 
 
-## Advanced  
+###### For Function Customizations : ######
+
+- Add your functions or make code-level changes.
+
+
+## Advanced
+
 ### Change the application :
 If you want to change your current application, you just need to change the `PUBLIC_KEY` in `index.html` file.
 
@@ -152,7 +152,7 @@ If you want to load conversation window, then you can use `loadConversationWindo
                 |-- login.js                  - login class
                 |-- recent-conversation.js    - recent conversation class
                 |-- search.js                 - search class
-            |-- adapter.js                    - channelize JS SDK functions
+            |-- adapter.js                    - Channelize JS SDK functions
             |-- constants.js                  - const variables
             |-- utility.js                    - utility functions
             |-- widget.js                     - widget main functions
