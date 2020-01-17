@@ -57,5 +57,3 @@ export const SETTINGS = {
 	LOCATION_API_KEY : "AIzaSyBzrL8FaUvmYPIxEUd_VTPpqcACtPdniik",
 	LOCATION_IMG_URL : "https://maps.googleapis.com/maps/api/staticmap"
 }
-
-

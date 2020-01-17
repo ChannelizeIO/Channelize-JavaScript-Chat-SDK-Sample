@@ -58,7 +58,6 @@ class Login {
 		// Create Login button
 		let loginBtnAttributes = [{"id":"ch_login_btn"},{"class":"ch-login-btn"}];
 		this.utility.createElement("button", loginBtnAttributes, LANGUAGE_PHRASES.START, loginWindow);
-
 	}
 
 	_createDummyUsersContainer(parent) {
@@ -147,14 +146,14 @@ class Login {
 		this.chAdapter.loginWithEmail(email, password, (err, res) => {
 			if(err) console.error(err);
 
-			const userId = window.userId =  res.user.id;
+			const userId = this.widget.userId =  res.user.id;
 			const accessToken = res.id;
 			// Connect to Channelize Server
 			this.widget.connect(userId, accessToken, (err,res) => {
 				if(err) console.error(err);
 
 				// Set cookies
-				this.widget.setCookie(userId, accessToken, 1);
+				this.widget.setCookie(userId, accessToken, 30);
 
 				if(isDummyUser) {
 					// Open recent conversation window
@@ -184,7 +183,6 @@ class Login {
 		// Login button listener
 		let loginBtn = document.getElementById("ch_login_btn");
 		loginBtn.addEventListener("click", data => {
-
 			this._createUser();
 		});
 

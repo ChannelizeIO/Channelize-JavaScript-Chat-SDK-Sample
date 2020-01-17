@@ -87,51 +87,51 @@ class ChannelizeAdapter {
 	}
 
 	addMember(conversation, memberIds, cb) {
-    conversation.addMembers(memberIds, function (err, res) {
-    	if (err) return cb(err);
+	    conversation.addMembers(memberIds, function (err, res) {
+	    	if (err) return cb(err);
 
-    	return cb(null, res);
-    });
+	    	return cb(null, res);
+	    });
 	}
 
 	removeMember(conversation, memberIds, cb) {
-    conversation.removeMembers(memberIds, function (err, res) {
-    	if (err) return cb(err);
+	    conversation.removeMembers(memberIds, function (err, res) {
+	    	if (err) return cb(err);
 
-    	return cb(null, res);
-    });
+	    	return cb(null, res);
+	    });
 	}
 
 	blockMember(userId, cb) {
 		this.channelize.User.block(userId, function (err, res) {
-		if (err) return cb(err);
+			if (err) return cb(err);
 
-    	return cb(null, res);
-    });
+	    	return cb(null, res);
+	    });
 	}
 
 	unblockMember(userId, cb) {
 		this.channelize.User.unblock(userId, function (err, res) {
-		if (err) return cb(err);
+			if (err) return cb(err);
 
-    	return cb(null, res);
-    });
+	    	return cb(null, res);
+	    });
 	}
 
 	clearConversation(conversation, cb) {
-    conversation.clear(function (err, res) {
-    	if (err) return cb(err);
+	    conversation.clear(function (err, res) {
+	    	if (err) return cb(err);
 
-    	return cb(null, res);
-    });
+	    	return cb(null, res);
+	    });
 	}
 
 	leaveConversation(conversation, cb) {
-    conversation.leave(function (err, res) {
-    	if (err) return cb(err);
+	    conversation.leave(function (err, res) {
+	    	if (err) return cb(err);
 
-    	return cb(null, res);
-    });
+	    	return cb(null, res);
+	    });
 	}
 
 	muteConversation(conversation, cb) {
@@ -143,43 +143,43 @@ class ChannelizeAdapter {
 	}
 
 	deleteConversation(conversation, cb) {
-    conversation.delete(function (err, res) {
-    	if (err) return cb(err);
+	    conversation.delete(function (err, res) {
+	    	if (err) return cb(err);
 
-    	return cb(null, res);
-    });
+	    	return cb(null, res);
+	    });
 	}
 
 	markAsReadConversation(conversation, cb) {
-    conversation.markAllMessageRead(function (err, res) {
-    	if (err) return cb(err);
+	    conversation.markAllMessageRead(function (err, res) {
+	    	if (err) return cb(err);
 
-    	return cb(null, res);
-    });
+	    	return cb(null, res);
+	    });
 	}
 
 	async sendTextMessage(conversation, body, tags = [], cb) {
-    conversation.sendTextMessage(body, tags, function (err, res) {
-    	if (err) return cb(err);
+	    conversation.sendTextMessage(body, tags, function (err, res) {
+	    	if (err) return cb(err);
 
-    	return cb(null, res);
-    });
+	    	return cb(null, res);
+	    });
 	}
 
 	async sendTextMessageToUser(userId, body, cb) {
-    this.channelize.Message.sendTextMessage(userId, body, function (err, message) {
-    	if (err) return cb(err);
+	    this.channelize.Message.sendTextMessage(userId, body, function (err, message) {
+	    	if (err) return cb(err);
 
-    	return cb(null, message);
-    });
+	    	return cb(null, message);
+	    });
 	}
 
 	async sendFileMessage(conversation, file, createThumbnail, cb) {
-    conversation.sendFileMessage(file, createThumbnail, function(err, message) {
-    	if (err) return cb(err);
+	    conversation.sendFileMessage(file, createThumbnail, function(err, message) {
+	    	if (err) return cb(err);
 
-    	return cb(null, message);
-    });
+	    	return cb(null, message);
+	    });
 	}
 
 	getMessages(conversation, limit = 50, skip = 0, cb) {
@@ -246,7 +246,6 @@ class ChannelizeAdapter {
 			return cb(null, users);
 		});
 	}
-
 }
 
 export { ChannelizeAdapter as default };

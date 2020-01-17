@@ -7,7 +7,7 @@ app.use(express.static('dist'));
 app.use(express.static('./'));
 
 app.get('/', function(req, res) {
-  res.sendfile('index.html');
+	res.sendfile('index.html');
 });
 
 app.listen(PORT);

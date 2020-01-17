@@ -74,7 +74,7 @@ class Search {
 
 			let moreUsersCount = 0;
 			users.forEach(user => {
-				if(!document.getElementById(user.id) && user.id != window.userId) {
+				if(!document.getElementById(user.id) && user.id != this.widget.userId) {
 					this._createFriendList(user);
 					++moreUsersCount;
 				}
@@ -182,22 +182,22 @@ class Search {
 				return;
 
 			// Create more users element
-			let moreUsers;
-			if(!document.getElementById("ch_more_users")) {
+			let moreUsers = document.getElementById("ch_more_users");
+			if(!moreUsers) {
 				let moreUsersAttributes = [{"id":"ch_more_users"},{"class":"ch-more-users"}];
 				moreUsers = this.utility.createElement("div", moreUsersAttributes, LANGUAGE_PHRASES.MORE_USERS, friendsBox);
 			}
 
 			let moreUsersCount = 0;
 			users.forEach(user => {
-				if(!document.getElementById(user.id) && user.id != window.userId) {
+				if(!document.getElementById(user.id) && user.id != this.widget.userId) {
 					this._createFriendList(user);
 					++moreUsersCount;
 				}
 			});
 
 			if(moreUsersCount) {
-				// Show more user header in other users found
+				// Show more user header if other users found
 				moreUsers.style.display = "block";
 			}
 		});

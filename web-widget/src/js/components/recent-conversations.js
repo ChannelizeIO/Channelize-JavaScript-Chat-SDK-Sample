@@ -75,7 +75,7 @@ class RecentConversations {
 			this._registerClickEventHandlers();
 
 		// Set user image in header
-		this.getUser(window.userId, (err, user) => {
+		this.getUser(this.widget.userId, (err, user) => {
 			if(err) return console.error(err);
 
 			let imgAttributes = [{"class":"ch-conversation-image"}];
@@ -116,8 +116,6 @@ class RecentConversations {
 
 		conversations.forEach(conversation => {
 			conversation = this.modifyConversation(conversation);
-			if(!conversation.member)
-				return;
 
 			// Create list of conversations
 			let listAttributes = [{"id":conversation.id}];
@@ -140,18 +138,21 @@ class RecentConversations {
 			let imgDiv = this.utility.createElement("div", imgAttributes, null, list);
 			imgDiv.style.backgroundImage = "url(" + conversation.profileImageUrl + ")";
 
-			// Create online icon
-			let iconAttributes = [{"id":conversation.member.userId+"_online_icon"},{"class":"ch-online-icon"}];
-			let icon = this.utility.createElement("span", iconAttributes, null, imgDiv);
+			if(!conversation.isGroup) {
+				// Create online icon
+				let iconAttributes = [{"id":conversation.member.userId+"_online_icon"},{"class":"ch-online-icon"}];
+				let icon = this.utility.createElement("span", iconAttributes, null, imgDiv);
 
-			// Show block icon
-			if(conversation.blockedByUser || conversation.blockedByMember) {
-				icon.classList.add("ch-user-blocked");
-				icon.classList.add("ch-show-element");
+				// Show block icon
+				if(conversation.blockedByUser || conversation.blockedByMember) {
+					icon.classList.add("ch-user-blocked");
+				}
+
+				// Show online icon
+				if(conversation.member.user && conversation.member.user.isOnline) {
+					icon.classList.add("ch-show-element");
+				}
 			}
-
-			if(!conversation.isGroup && conversation.member.user && conversation.member.user.isOnline)
-				icon.classList.add("ch-show-element");
 
 			// Create title div
 			let titleDivAttributes = [{"id":"ch_title"}];
@@ -186,42 +187,33 @@ class RecentConversations {
 	}
 
 	modifyConversation(conversation) {
-		let member = conversation.membersList.find(member => member.userId != window.userId);
+		let member = conversation.membersList.find(member => member.userId != this.widget.userId);
 		if (!member || !member.user) {
-      conversation.title = LANGUAGE_PHRASES.DELETED_MEMBER;
-      conversation.profileImageUrl = null;
-      conversation.isOnline = false;
-      return conversation;
-    }
+			conversation.title = LANGUAGE_PHRASES.DELETED_MEMBER;
+			conversation.profileImageUrl = null;
+			return conversation;
+    	}
 
-    //Set profile Image of conversation
-    let imgUrl;
-    if(!conversation.isGroup)
-    	imgUrl = IMAGES.AVTAR;
-    else
-    	imgUrl = IMAGES.GROUP;
-
-		if(conversation.isGroup)
-			conversation.profileImageUrl = conversation.profileImageUrl ? conversation.profileImageUrl : imgUrl;
-		else
-			conversation.profileImageUrl = member.user.profileImageUrl ? member.user.profileImageUrl : imgUrl;
-
-    // Set conversation title and member status
-		conversation.title = conversation.isGroup ? conversation.title : member.user.displayName;
-		conversation.isOnline = member.user ? member.user.isOnline : false;
-		conversation.member = member;
-
-		let loginUser = conversation.membersList.find(member => member.userId == window.userId);
+    	// Set last message of conversation
+    	let loginUser = conversation.membersList.find(member => member.userId == this.widget.userId);
 		conversation = this._setLastMessage(conversation, loginUser.lastMessage);
 
-		// Set block user status
-		if(!member.isActive)
-			conversation.blockedByMember = true;
+	    // Set profile Image, title and status of conversation
+		if(conversation.isGroup) {
+			conversation.profileImageUrl = conversation.profileImageUrl ? conversation.profileImageUrl : IMAGES.GROUP;
+		}
+		else {
+			conversation.profileImageUrl = member.user.profileImageUrl ? member.user.profileImageUrl : IMAGES.AVTAR;
+			conversation.member = member;
+			conversation.title = member.user.displayName;
 
-		if(!loginUser.isActive)
+			// Set block user status
+			if(!member.isActive)
+				conversation.blockedByMember = true;
+
+			if(!loginUser.isActive)
 			conversation.blockedByUser = true;
-
-		conversation.modified = true;
+		}
 		return conversation;
 	}
 
@@ -284,7 +276,7 @@ class RecentConversations {
 			conversation.lastMessageTime = this.utility.updateTimeFormat(Date());
 		}
 		else {
-			let loginUser = conversation.membersList.find(member => member.userId == window.userId);
+			let loginUser = conversation.membersList.find(member => member.userId == this.widget.userId);
 			conversation.lastMessageTime = this.utility.updateTimeFormat(loginUser.updatedAt);
 		}
 		
@@ -405,36 +397,25 @@ class RecentConversations {
 		}
 	}
 
-	updateUserOnline(user) {
+	updateUserStatus(user) {
 		if(!this.conversations)
 			return;
 
-		this.conversations.forEach(conversation => {
-			if(conversation.member.userId == user.id) {
-				conversation.status = "Online";
-				return;
-			}
-		});
-
-		let onlineIcon = document.getElementById(user.id+"_online_icon");
-		if(onlineIcon) {
-			onlineIcon.classList.remove("ch-user-blocked");
-			onlineIcon.classList.add("ch-show-element");
+		const index = this.conversations.findIndex(conversation => conversation.member.userId == user.id);
+		if(index != -1) {
+			this.conversations[index].member.user = user;
 		}
-	}
 
-	updateUserOffline(user) {
-		if(!this.conversations)
+		// Update block/unblock icon
+		let userStatusIcon = document.getElementById(user.id+"_online_icon");
+		if(!userStatusIcon)
 			return;
 
-		let conv = this.conversations.find(conversation => {
-			conversation.member.userId == user.id;
-			conversation.status = this.utility.updateTimeFormat(user.lastSeen);
-		});
-
-		let onlineIcon = document.getElementById(user.id+"_online_icon");
-		if(onlineIcon) {
-			onlineIcon.classList.remove("ch-show-element");
+		if(user.isOnline) {
+			userStatusIcon.classList.add("ch-show-element");
+		}
+		else {
+			userStatusIcon.classList.remove("ch-show-element");
 		}
 	}
 
@@ -461,6 +442,22 @@ class RecentConversations {
 		let imgAttributes = [{"class":"ch-conversation-image"}];
 		let imgDiv = this.utility.createElement("div", imgAttributes, null, newConvlist);
 		imgDiv.style.backgroundImage = "url(" + conversation.profileImageUrl + ")";
+
+		if(!conversation.isGroup) {
+			// Create online icon
+			let iconAttributes = [{"id":conversation.member.userId+"_online_icon"},{"class":"ch-online-icon"}];
+			let icon = this.utility.createElement("span", iconAttributes, null, imgDiv);
+
+			// Show block icon
+			if(conversation.blockedByUser || conversation.blockedByMember) {
+				icon.classList.add("ch-user-blocked");
+			}
+
+			// Show online icon
+			if(conversation.member.user && conversation.member.user.isOnline) {
+				icon.classList.add("ch-show-element");
+			}
+		}
 
 		// Create title div
 		let titleAttributes = [{"id":"ch_title"}];
@@ -554,34 +551,26 @@ class RecentConversations {
 		});
 	}
 
-	handleBlock(self, userId) {
+	handleBlockStatus(self, userId, action) {
 		this.conversations.forEach(conversation => {
+			if(conversation.isGroup)
+				return;
+
 			if(conversation.member.userId == userId && self) {
-				conversation.blockedByMember = true;
+				conversation.blockedByMember = (action == "block") ? true : false;
 			}
 			else if(conversation.member.userId == userId && !self) {
-				conversation.blockedByUser = true;
+				conversation.blockedByUser = (action == "block") ? true : false;
 			}
 		});
 
 		let onlineIcon = document.getElementById(userId+"_online_icon");
-		if(onlineIcon)
+		if(onlineIcon && (action == "block")) {
 			onlineIcon.classList.add("ch-user-blocked");
-	}
-
-	handleUnblock(self, userId) {
-		this.conversations.forEach(conversation => {
-			if(conversation.member.userId == userId && self) {
-				conversation.blockedByMember = false;
-			}
-			else if(conversation.member.userId == userId && !self) {
-				conversation.blockedByUser = false;
-			}
-		});
-
-		let onlineIcon = document.getElementById(userId+"_online_icon");
-		if(onlineIcon)
+		}
+		else if(onlineIcon && (action == "unblock")) {
 			onlineIcon.classList.remove("ch-user-blocked");
+		}
 	}
 }
 
