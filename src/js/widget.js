@@ -53,7 +53,7 @@ class ChannelizeWidget {
 	}
 
 	// Connect and load channelize
-	loadWithConnect(userId, accessToken) {
+	loadWithUserId(userId, accessToken) {
 		this.connect(userId, accessToken, (err, res) => {
 			if(err) return console.error(err);
 
