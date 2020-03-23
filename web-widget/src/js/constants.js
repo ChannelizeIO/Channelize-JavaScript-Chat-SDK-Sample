@@ -20,10 +20,12 @@ export const LANGUAGE_PHRASES = {
 	LOCATION : "Location",
 	STICKER : "Sticker",
 	GIF : "GIF",
+	ATTACHMENT : "Attachment",
 	SEND_ATTACHMENTS : "Send Attachments",
 	MEMBERS : "Members",
 	FILE_SIZE_WARNING : "File size should be less then 25mb",
 	SEARCH : "Search",
+	SEARCH_MEMBERS : "Search Members",
 	SUGGESTED : "Suggested",
 	MORE_USERS : "More Users",
 	LOGIN : "Login",
@@ -34,7 +36,14 @@ export const LANGUAGE_PHRASES = {
 	ENTER_NAME : "Please enter a name",
 	USER_EXIST : "User already exist with this username",
 	DELETE_FOR_ME : "Delete for me",
-	DELETE_FOR_EVERYONE : "Delete for everyone"
+	DELETE_FOR_EVERYONE : "Delete for everyone",
+	GROUP_CREATED : "Group created",
+	GROUP_PHOTO_CHANGED : "Group photo updated",
+	GROUP_TITLE_CHANGED : "Group title updated",
+	GROUP_MEMBER_ADDED : "New member added in group",
+	GROUP_MEMBER_REMOVED : "One member removed from group",
+	GROUP_ADMIN_UPDATED : "Group admin updated",
+	CONVERSATION_NOT_FOUND : "Conversation not fond"
 }
 
 export const IMAGES = {
@@ -51,11 +60,10 @@ export const IMAGES = {
 	GIF_ICON : "https://cdn.channelize.io/apps/web-widget/1.0.0/images/gif.png",
 	AVTAR : "https://cdn.channelize.io/apps/web-widget/1.0.0/images/avtar.png",
 	GROUP : "https://cdn.channelize.io/apps/web-widget/1.0.0/images/group.png",
+	MESSAGE_LOADER : "https://cdn.channelize.io/apps/web-widget/1.0.0/images/image-loader.gif"
 }
 
 export const SETTINGS = {
 	LOCATION_API_KEY : "AIzaSyBzrL8FaUvmYPIxEUd_VTPpqcACtPdniik",
 	LOCATION_IMG_URL : "https://maps.googleapis.com/maps/api/staticmap"
 }
-
-

@@ -9,18 +9,17 @@ import { LANGUAGE_PHRASES, IMAGES } from "./constants.js";
 class ChannelizeWidget {
 	constructor(publicKey) {
 		this.utility = new Utility();
-		this.publicKey = publicKey;
-		this._init();
+		this._init(publicKey);
 	}
 
 	// Initialize the main contents
-	_init() {
+	_init(publicKey) {
 		// Create script tag for material icons
 		let materialScriptAttributes = [{"href":"https://fonts.googleapis.com/icon?family=Material+Icons"},{"rel":"stylesheet"}];
 		this.utility.createElement("link", materialScriptAttributes, null, document.head);
 
 		// Initialize Channelize Adapter
-		this.chAdapter = new ChannelizeAdapter(this.publicKey);
+		this.chAdapter = new ChannelizeAdapter(publicKey);
 		this.convWindows = [];
 	}
 
@@ -34,7 +33,7 @@ class ChannelizeWidget {
 			this.connect(userId, accessToken, (err, res) => {
 				if(err) return console.error(err);
 
-				window.userId = userId;
+				this.userId = userId;
 				this._createLauncher();
 			});
 		}
@@ -43,22 +42,22 @@ class ChannelizeWidget {
 		}
 	}
 
-  connect(userId, accessToken, cb) {
-  	this.chAdapter.connect(userId, accessToken, (err, res) => {
-		if(err) return cb(err);
+	connect(userId, accessToken, cb) {
+	  	this.chAdapter.connect(userId, accessToken, (err, res) => {
+			if(err) return cb(err);
 
-		this._registerChEventHandlers();
-		return cb(null, res);
-	});
-  }
+			this._registerChEventHandlers();
+			return cb(null, res);
+		});
+	}
 
 	// Connect and load channelize
-	loadWithConnect(userId, accessToken) {
+	loadWithUserId(userId, accessToken) {
 		this.connect(userId, accessToken, (err, res) => {
 			if(err) return console.error(err);
 
-			window.userId = userId;
-			this.setCookie(userId, accessToken, 1);
+			this.userId = userId;
+			this.setCookie(userId, accessToken, 30);
 			this._createLauncher();
 		});
 	}
@@ -94,39 +93,37 @@ class ChannelizeWidget {
 				return;
 			}
 
-			this.chAdapter.getCurrentUser((err, user) => {
-				if(user) {
-					// Invoke recent conversation window
-					this.recentConversations =  new RecentConversations(this);
-				}
-				else {
-					// Invoke login screen
-					new Login(this);
-				}
-			});
+			let user = this.chAdapter.getLoginUser();
+			if(user) {
+				// Invoke recent conversation window
+				this.recentConversations =  new RecentConversations(this);
+			}
+			else {
+				// Invoke login screen
+				new Login(this);
+			}
 		});
 	}
 
 	// Handle all real time events of JS-SDK
 	_registerChEventHandlers() {
 		// Handle new message
-		window.channelize.chsocket.on('messageReceived', (message) => {
+		window.channelize.chsocket.on('user.message_created', (data) => {
 			if(this.recentConversations) {
-				this.recentConversations.updateNewMessage(message);
+				this.recentConversations.updateNewMessage(data.message);
 			}
 
 			this.convWindows.forEach(conversationWindow => {
-				conversationWindow.addNewMessage(message);
+				conversationWindow.addNewMessage(data.message);
 			});
 		});
 
 		// Handle delete message for me
-		window.channelize.chsocket.on('messagesDeletedForMe', (data) => {
+		window.channelize.chsocket.on('user.message_deleted', (data) => {
 			let updatedLastMsg;
-
 			// Remove message from conversation screen
-			if(document.getElementById(data.messageIds[0])) {
-				document.getElementById(data.messageIds[0]).remove();
+			if(document.getElementById(data.messages[0].id)) {
+				document.getElementById(data.messages[0].id).remove();
 
 				if(document.getElementById("ch_messages_box").lastChild) {
 					let lastMsgAfterDelete = document.getElementById("ch_messages_box").lastChild.id;
@@ -140,76 +137,71 @@ class ChannelizeWidget {
 		});
 
 		// Handle delete message for everyone
-		channelize.chsocket.on('messagesDeletedForEveryone', (data) => {
+		window.channelize.chsocket.on('message.deleted_for_everyone', (data) => {
 			// Update message text in conversation screen
 			this.convWindows.forEach(conversationWindow => {
 				conversationWindow.updateDeleteForEveryoneMsg(data);
 			});
 
 			// Update message text in recent screen
-			let recentTargetMsg = document.getElementById("ch_msg_" + data.deletedIds[0]);
-			if(recentTargetMsg)
+			let recentTargetMsg = document.getElementById("ch_msg_" + data.messages[0].id);
+			if(recentTargetMsg) {
+				// Remove if media/location/sticker/gif icon present
+				if(recentTargetMsg.parentNode.firstChild.nodeName != "DIV")
+					recentTargetMsg.parentNode.firstChild.remove();
+
 				recentTargetMsg.innerHTML = "<i>" + LANGUAGE_PHRASES.MESSAGE_DELETED;
+			}
 		});
 
 		// Handle mark as read
-		window.channelize.chsocket.on('readMessageToOwner', (message) => {
-			if(!message.messageId || !document.getElementById(message.messageId))
+		window.channelize.chsocket.on('conversation.mark_as_read', (data) => {
+			if(this.userId == data.user.id)
 				return;
 
-			let msgBox = document.getElementById(message.messageId).firstChild;
-			msgBox.lastChild.innerHTML = "done_all";
-		});
-
-		// Handle user online
-		window.channelize.chsocket.on('online', (user) => {
+			// Update lastReadAt of conversation
 			if(this.recentConversations) {
-				this.recentConversations.updateUserOnline(user);
+				this.recentConversations.updateReadAt(data);
 			}
 
+			// Update message read status in conversation screen
 			this.convWindows.forEach(conversationWindow => {
-				conversationWindow.updateStatus(user);
+				conversationWindow.updateMsgStatus(data);
 			});
 		});
 
-		// Handle user offline
-		window.channelize.chsocket.on('offline', (user) => {
+		// Handle user online/ofline status
+		window.channelize.chsocket.on('user.status_updated', (data) => {
 			if(this.recentConversations) {
-				this.recentConversations.updateUserOffline(user);
+				this.recentConversations.updateUserStatus(data.user);
 			}
-			
+
 			this.convWindows.forEach(conversationWindow => {
-				conversationWindow.updateStatus(user);
+				conversationWindow.updateUserStatus(data.user);
 			});
 		});
 
 		// Handle clear conversation
-		window.channelize.chsocket.on('conversationCleared', (conversation) => {
+		window.channelize.chsocket.on('user.conversation_cleared', (data) => {
 			// Delete last message from particular recent conversation
-			if(document.getElementById(conversation.id) && document.getElementById(conversation.id).lastChild)
-				document.getElementById(conversation.id).lastChild.remove();
+			if(document.getElementById(data.conversation.id) && document.getElementById(data.conversation.id).lastChild)
+				document.getElementById(data.conversation.id).lastChild.remove();
 
-			// Open new updated conversation screen
+			// Remove all messages of the conversation
 			this.convWindows.forEach(conversationWindow => {
-				if(conversationWindow.conversation.id == conversation.id) {
-					if(document.getElementById("ch_conv_window")) {
-						document.getElementById("ch_conv_window").remove();
-					}
-					conversationWindow = new ConversationWindow(this);
-					conversationWindow.init(conversation);
-				}
+				conversationWindow.handleClearConversation(data.conversation);
 			});
 		});
 
 		// Handle delete conversation
-		window.channelize.chsocket.on('conversationDeleted', (conversation) => {
+		window.channelize.chsocket.on('user.conversation_deleted', (data) => {
 			// Delete last message from particular recent conversation
-			if(document.getElementById(conversation.id) && document.getElementById(conversation.id).lastChild)
-				document.getElementById(conversation.id).remove();
+			if(document.getElementById(data.conversation.id) && document.getElementById(data.conversation.id).lastChild)
+				document.getElementById(data.conversation.id).remove();
 
 			// Remove conversation screen
 			this.convWindows.forEach(conversationWindow => {
-				if(conversationWindow.conversation.id == conversation.id) {
+				if(conversationWindow.conversation.id == data.conversation.id) {
 					if(document.getElementById("ch_conv_window")) {
 						document.getElementById("ch_conv_window").remove();
 					}
@@ -218,24 +210,28 @@ class ChannelizeWidget {
 		});
 
 		// Handle user block
-		window.channelize.chsocket.on('userBlocked', (self, userId) => {
+		window.channelize.chsocket.on('user.blocked', (data) => {
 			// Update block icon in recent conversation
-			this.recentConversations.handleBlock(self, userId);
+			if(this.recentConversations) {
+				this.recentConversations.handleBlock(data);
+			}
 			
 			// Update conversation screen of block user
 			this.convWindows.forEach(conversationWindow => {
-				conversationWindow.handleBlock(self, userId);
+				conversationWindow.handleBlock(data);
 			});
 		});
 
 		// Handle user unblock
-		window.channelize.chsocket.on('userUnblocked', (self, userId) => {
+		window.channelize.chsocket.on('user.unblocked', (data) => {
 			// Update unblock icon in recent conversation
-			this.recentConversations.handleUnblock(self, userId);
+			if(this.recentConversations) {
+				this.recentConversations.handleUnblock(data);
+			}
 			
 			// Update conversation screen of unblock user
 			this.convWindows.forEach(conversationWindow => {
-				conversationWindow.handleUnblock(self, userId);
+				conversationWindow.handleUnblock(data);
 			});
 		});
 	}
@@ -249,26 +245,31 @@ class ChannelizeWidget {
 	}
 
 	getCookie(cname) {
-	  var name = cname + "=";
-	  var cookieArray = document.cookie.split(';');
-	  for(var i = 0; i < cookieArray.length; i++) {
-	    var singleCookie = cookieArray[i];
-	    while (singleCookie.charAt(0) == ' ') {
-	      singleCookie = singleCookie.substring(1);
-	    }
-	    if (singleCookie.indexOf(name) == 0) {
-	      return singleCookie.substring(name.length, singleCookie.length);
-	    }
-	  }
-	  return "";
+		var name = cname + "=";
+		var cookieArray = document.cookie.split(';');
+		for(var i = 0; i < cookieArray.length; i++) {
+			var singleCookie = cookieArray[i];
+			while (singleCookie.charAt(0) == ' ') {
+				singleCookie = singleCookie.substring(1);
+			}
+			if (singleCookie.indexOf(name) == 0) {
+				return singleCookie.substring(name.length, singleCookie.length);
+			}
+		}
+		return "";
 	}
 
 	// To skip out login process and direct open recent conversation window
 	loadRecentConversation(userId, accessToken) {
 		// Connect to Channelize server
-		window.userId = userId;
-		this.chAdapter.connect(userId, accessToken, (err, res) => {
+		this.userId = userId;
+		this.connect(userId, accessToken, (err, res) => {
 			if(err) return console.error(err);
+
+			// Create channelize frame
+			let widget = document.getElementById("ch_widget");
+			let frameAttributes = [{"id":"ch_frame"},{"class":"ch-frame"}];
+			let frame = this.utility.createElement("div", frameAttributes, null, widget);
 
 			// Invoke recent conversation window
 			this.recentConversations =  new RecentConversations(this);
@@ -278,11 +279,16 @@ class ChannelizeWidget {
 	// To open a conversation screen of any user via member-id or conversation-id
 	loadConversationWindow(otherMemberId, conversationId = null) {
 		if(otherMemberId) {
-			this.chAdapter.getConversationsList(1, 0, otherMemberId, (err, conversation) => {
+			this.chAdapter.getConversationsList(1, 0, otherMemberId, "members", null, null, null, null, null, (err, conversations) => {
 				if(err) return console.error(err);
 
-				let conversationWindow = new conversationWindow(this);
-				conversationWindow.init(conversation); // Pass conversation object in params
+				if(!conversations.length) {
+					console.error(LANGUAGE_PHRASES.CONVERSATION_NOT_FOUND);
+					return;
+				}
+
+				let conversationWindow = new ConversationWindow(this);
+				conversationWindow.init(conversations[0]); // Pass conversation object in params
 				this.convWindows.push(conversationWindow);
 			});
 		}
@@ -290,7 +296,7 @@ class ChannelizeWidget {
 			let conversation = this.chAdapter.getConversation(conversationId, (err, conversation) => {
 				if(err) return console.error(err);
 
-				let conversationWindow = new conversationWindow(this);
+				let conversationWindow = new ConversationWindow(this);
 				conversationWindow.init(conversation); // Pass conversation object in params
 				this.convWindows.push(conversationWindow);
 			});

@@ -20,8 +20,8 @@ class ChannelizeAdapter {
 		});
 	}
 
-	getCurrentUser(cb) {
-		return cb(null, this.channelize.getCurrentUser());
+	getLoginUser() {
+		return this.channelize.getLoginUser();
 	}
 
 	connect(userId, accessToken, cb) {
@@ -40,8 +40,13 @@ class ChannelizeAdapter {
 		});
 	}
 
-	createUser(displayName, email, password, cb) {
-		this.channelize.User.createUser(displayName, email, password, function (err, user) {
+	createUser(name, email, password, cb) {
+		let data = {
+			displayName : name,
+			email : email,
+			password : password
+		}
+		this.channelize.User.createUser(data, function (err, user) {
 			if(err) return cb(err);
 
 			return cb(null, user);
@@ -56,12 +61,19 @@ class ChannelizeAdapter {
 		});
 	}
 
-	getConversationsList(limit, skip, memberId = null, cb) {
+	getConversationsList(limit, skip, memberIds, include, convIds, convType, search, isGroup, customTypes, cb) {
 		let conversationListQuery = this.channelize.Conversation.createConversationListQuery();
 		conversationListQuery.limit = limit;
 		conversationListQuery.skip = skip;
-		if(memberId)
-			conversationListQuery.memberId = memberId;
+		conversationListQuery.include = include;
+		conversationListQuery.ids = convIds;
+		conversationListQuery.type = convType;
+		conversationListQuery.search = search;
+		conversationListQuery.isGroup = isGroup;
+		conversationListQuery.customTypes = customTypes;
+
+		if(memberIds)
+			conversationListQuery.membersExactly = memberIds;
 
 		conversationListQuery.list(function (err, conversations) {
 			if(err) return cb(err);
@@ -71,7 +83,7 @@ class ChannelizeAdapter {
 	}
 
 	getConversation(conversationId, cb) {
-		this.channelize.Conversation.getConversation(conversationId, "messages", function (err, conversation) {
+		this.channelize.Conversation.getConversation(conversationId, "members", function (err, conversation) {
 			if(err) return cb(err);
 
 			return cb(null, conversation);
@@ -87,55 +99,63 @@ class ChannelizeAdapter {
 	}
 
 	addMember(conversation, memberIds, cb) {
-    conversation.addMembers(memberIds, function (err, res) {
-    	if (err) return cb(err);
+	    conversation.addMembers(memberIds, function (err, res) {
+	    	if (err) return cb(err);
 
-    	return cb(null, res);
-    });
+	    	return cb(null, res);
+	    });
 	}
 
 	removeMember(conversation, memberIds, cb) {
-    conversation.removeMembers(memberIds, function (err, res) {
-    	if (err) return cb(err);
+	    conversation.removeMembers(memberIds, function (err, res) {
+	    	if (err) return cb(err);
 
-    	return cb(null, res);
-    });
+	    	return cb(null, res);
+	    });
 	}
 
 	blockMember(userId, cb) {
 		this.channelize.User.block(userId, function (err, res) {
-		if (err) return cb(err);
+			if (err) return cb(err);
 
-    	return cb(null, res);
-    });
+	    	return cb(null, res);
+	    });
 	}
 
 	unblockMember(userId, cb) {
 		this.channelize.User.unblock(userId, function (err, res) {
-		if (err) return cb(err);
+			if (err) return cb(err);
 
-    	return cb(null, res);
-    });
+	    	return cb(null, res);
+	    });
 	}
 
 	clearConversation(conversation, cb) {
-    conversation.clear(function (err, res) {
-    	if (err) return cb(err);
+	    conversation.clear(function (err, res) {
+	    	if (err) return cb(err);
 
-    	return cb(null, res);
-    });
+	    	return cb(null, res);
+	    });
 	}
 
 	leaveConversation(conversation, cb) {
-    conversation.leave(function (err, res) {
-    	if (err) return cb(err);
+	    conversation.leave(function (err, res) {
+	    	if (err) return cb(err);
 
-    	return cb(null, res);
-    });
+	    	return cb(null, res);
+	    });
 	}
 
 	muteConversation(conversation, cb) {
-		conversation.mute(function (err, res) {
+		conversation.muteConversation(function (err, res) {
+			if (err) return cb(err);
+
+    	return cb(null, res);
+		});
+	}
+
+	unmuteConversation(conversation, cb) {
+		conversation.unmuteConversation(function (err, res) {
 			if (err) return cb(err);
 
     	return cb(null, res);
@@ -143,60 +163,76 @@ class ChannelizeAdapter {
 	}
 
 	deleteConversation(conversation, cb) {
-    conversation.delete(function (err, res) {
-    	if (err) return cb(err);
+	    conversation.delete(function (err, res) {
+	    	if (err) return cb(err);
 
-    	return cb(null, res);
-    });
+	    	return cb(null, res);
+	    });
 	}
 
-	markAsReadConversation(conversation, cb) {
-    conversation.markAllMessageRead(function (err, res) {
-    	if (err) return cb(err);
+	markAsReadConversation(conversation, timestamp, cb) {
+	    conversation.markAsRead(timestamp, function (err, res) {
+	    	if (err) return cb(err);
 
-    	return cb(null, res);
-    });
+	    	return cb(null, res);
+	    });
 	}
 
-	async sendTextMessage(conversation, body, tags = [], cb) {
-    conversation.sendTextMessage(body, tags, function (err, res) {
-    	if (err) return cb(err);
+	async sendMessage(conversation, data, cb) {
+	    conversation.sendMessage(data, function (err, res) {
+	    	if (err) return cb(err);
 
-    	return cb(null, res);
-    });
+	    	return cb(null, res);
+	    });
 	}
 
-	async sendTextMessageToUser(userId, body, cb) {
-    this.channelize.Message.sendTextMessage(userId, body, function (err, message) {
-    	if (err) return cb(err);
+	async sendMessageToUser(data, cb) {
+	    this.channelize.Message.sendMessage(data, function (err, message) {
+	    	if (err) return cb(err);
 
-    	return cb(null, message);
-    });
+	    	return cb(null, message);
+	    });
 	}
 
-	async sendFileMessage(conversation, file, createThumbnail, cb) {
-    conversation.sendFileMessage(file, createThumbnail, function(err, message) {
-    	if (err) return cb(err);
+	async uploadFile(file, createThumbnail, cb) {
+	    this.channelize.Message.uploadFile(file, createThumbnail, function(err, message) {
+	    	if (err) return cb(err);
 
-    	return cb(null, message);
-    });
+	    	return cb(null, message);
+	    });
 	}
 
-	getMessages(conversation, limit = 50, skip = 0, cb) {
+	getConversationMembers(conversation, cb) {
+	    conversation.getMembers(function(err, members) {
+	    	if (err) return cb(err);
+
+	    	return cb(null, message);
+	    });
+	}
+
+	getMessageReadMembers(conversation, message) {
+	    return conversation.getReadMembers(message);
+	}
+
+	readByAllMembers(conversation, message) {
+	    return conversation.readByAllMembers(message);
+	}
+
+	getMessages(conversation, limit, skip, ids, types, attachmentTypes, ownerIds, cb) {
 		let messageListQuery = conversation.createMessageListQuery();
 		messageListQuery.sort = 'createdAt DESC';
-		messageListQuery.limit = limit;	
+		messageListQuery.limit = limit ? limit : 50;
 		messageListQuery.skip = skip;
+		messageListQuery.ids = ids;
+		messageListQuery.types = types;
+		messageListQuery.attachmentTypes = attachmentTypes;
+		messageListQuery.ownerIds = ownerIds;
 
 		messageListQuery.list(function (err, messages) {
 			if (err) return cb(err);
 
 			return cb(null, messages);
 		});
-	}
-
-	getLastMessage(conversation, cb) {
-		return cb(null, conversation.getLastMessage());
 	}
 
 	deleteMessagesForMe(messageIds, cb) {
@@ -223,8 +259,15 @@ class ChannelizeAdapter {
 		});
 	}
 
-	getFriends(cb) {
+	getFriends(searchTerm, limit, skip, isOnline, includeBlocked, cb) {
 		let userListQuery = this.channelize.User.createUserListQuery();
+		userListQuery.search = searchTerm;
+		userListQuery.limit = limit;
+		userListQuery.skip = skip;
+		userListQuery.sort = "displayName ASC";
+		userListQuery.isOnline = isOnline;
+		userListQuery.includeBlocked = includeBlocked;
+
 		userListQuery.friendsList(function (err, users) {
 			if(err) return cb(err);
 
@@ -240,13 +283,12 @@ class ChannelizeAdapter {
 		userListQuery.role = role;
 		userListQuery.includeDeleted = includeDeleted;
 
-		userListQuery.allUsersList(function (err, users) {
+		userListQuery.usersList(function (err, users) {
 			if(err) return cb(err);
 
 			return cb(null, users);
 		});
 	}
-
 }
 
 export { ChannelizeAdapter as default };

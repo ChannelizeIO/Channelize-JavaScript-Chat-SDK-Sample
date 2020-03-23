@@ -1,5 +1,4 @@
 import Utility from "../utility.js";
-import RecentConversations from "./recent-conversations.js";
 import { LANGUAGE_PHRASES, IMAGES, SETTINGS } from "../constants.js";
 
 class ConversationWindow {
@@ -13,6 +12,7 @@ class ConversationWindow {
 		this.loadCount = 0;
 		this.limit = 25;
 		this.skip = 0;
+		this.messages = [];
 	}
 
 	init(conversation = null, data = null) {
@@ -22,7 +22,6 @@ class ConversationWindow {
 		}
 
 		this.conversation = this.modifyConversation(conversation);
-
 		this._openConversationWindow(this.conversation, true);
 		this._registerClickEventHandlers();
 		this._markAsRead(this.conversation);
@@ -83,10 +82,6 @@ class ConversationWindow {
 		let dropDownAttributes = [{"id":"ch_conv_drop_down"},{"class":"ch-conv-drop-down"}];
 		let dropDown = this.utility.createElement("div", dropDownAttributes, null, header);
 
-		// Create mute option
-		let muteOptionAttributes = [{"id":"ch_conv_mute"},{"class":"ch-conv-mute"}];
-		this.utility.createElement("div", muteOptionAttributes, LANGUAGE_PHRASES.MUTE_CONV, dropDown);
-
 		// Create clear option
 		let clearOptionAttributes = [{"id":"ch_conv_clear"},{"class":"ch-conv-clear"}];
 		this.utility.createElement("div", clearOptionAttributes, LANGUAGE_PHRASES.CLEAR_CONV, dropDown);
@@ -96,12 +91,14 @@ class ConversationWindow {
 		this.utility.createElement("div", deleteOptionAttributes, LANGUAGE_PHRASES.DELETE_CONV, dropDown);
 
 		// Create block user option
-		let blockOptionAttributes = [{"id":"ch_conv_block"},{"class":"ch-conv-block"}];
+		let blockOptionAttributes = [{"id":"ch_conv_block"}];
 		let blockOption = this.utility.createElement("div", blockOptionAttributes, LANGUAGE_PHRASES.BLOCK_USER, dropDown);
+		blockOption.style.display = "none";
 
 		// Create unblock user option
-		let unblockOptionAttributes = [{"id":"ch_conv_unblock"},{"class":"ch-conv-unblock"}];
+		let unblockOptionAttributes = [{"id":"ch_conv_unblock"}];
 		let unblockOption = this.utility.createElement("div", unblockOptionAttributes, LANGUAGE_PHRASES.UNBLOCK_USER, dropDown);
+		unblockOption.style.display = "none";
 
 		if(!conversation.isGroup) {
 			if(conversation.blockedByUser) 
@@ -118,10 +115,6 @@ class ConversationWindow {
 		// Create message box
 		let msgsBoxAttributes = [{"id":"ch_messages_box"},{"class":"ch-messages-box"}];
 		let messagesBox = this.utility.createElement("div", msgsBoxAttributes, null, windowDiv);
-
-		// Create snackbar for warnings
-		let snackbarAttributes = [{"id":"ch_snackbar"}];
-		this.utility.createElement("div", snackbarAttributes, null, windowDiv);
 
 		if(loadMessages) {
 			// Create loader container
@@ -237,7 +230,7 @@ class ConversationWindow {
 
 	_createMessagesListing(conversation) {
 		// Get conversation messages
-		this._getMessages(conversation, this.limit, this.skip, (err, messages) => {
+		this._getMessages(conversation, this.limit, this.skip, null, null, null, null, (err, messages) => {
 			if(err) return console.error(err);
 
 			this.messages = messages;
@@ -256,12 +249,10 @@ class ConversationWindow {
 			this.messages.forEach(message => {
 				// Update message object
 				message = this._modifyMessage(message);
-				this.previousUserId = message.ownerId;
 
-				// Handle meta message
-				if(message.contentType == 1) {
-					// let metaMessageAttributes = [{"class":"ch-meta-msg"}];
-					// this.utility.createElement("div", metaMessageAttributes, "Meta Message", messagesBox);
+				if(message.type == "admin") {
+					let metaMessageAttributes = [{"class":"ch-admin-msg"}];
+					this.utility.createElement("div", metaMessageAttributes, message.body, messagesBox);
 					return;
 				}
 
@@ -270,7 +261,7 @@ class ConversationWindow {
 				let msgList = this.utility.createElement("div", msgListAttributes, null, messagesBox);
 
 				// Create sender name div
-				if(conversation.isGroup && message.ownerId != window.userId) {
+				if(conversation.isGroup && message.ownerId != this.widget.userId) {
 					let senderAttributes = [{"class":"ch-sender-name"}];
 					this.utility.createElement("div", senderAttributes, message.owner.displayName, msgList);
 				}
@@ -290,18 +281,18 @@ class ConversationWindow {
 				let msgDiv = this.utility.createElement("div", msgDivAttributes, message.body, msgContainer);
 
 				// Create media message frame
-				this._createMediaMessageFrame(message);
+				this._createMediaMessageFrame(message, msgDiv);
 
 				// Create message time span
 				let msgTimeAttributes = [{"id":"ch_msg_time"},{"class":"ch-msg-time"}];
 				let msgTime = this.utility.createElement("span", msgTimeAttributes, message.createdAt, msgContainer);
 
-				if(message.ownerId == window.userId) {
+				if(message.ownerId == this.widget.userId) {
 					msgContainer.classList.add("right");
 					moreOption.classList.add("left");
 					// Create message read status
 					let statusAttributes = [{"id":"ch_msg_status"}];
-					let readIcon = message.readStatus == 3 ? "done_all" : "check";
+					let readIcon = message.readByAll ? "done_all" : "check";
 					let msgStatus = this.utility.createElement("i", statusAttributes, readIcon, msgContainer);
 					msgStatus.classList.add("material-icons", "ch-msg-status");
 				}
@@ -315,20 +306,39 @@ class ConversationWindow {
 	}
 
 	modifyConversation(conversation) {
-		if(!conversation.isGroup) {
-			// Set conversation title and image
-			let member = conversation.membersList.find(member => member.userId != window.userId);
-			conversation.title = member.user.displayName;
-			conversation.profileImageUrl = member.user.profileImageUrl ? member.user.profileImageUrl : IMAGES.AVTAR;
 
-			if(member.user.isOnline)
-				conversation.status = LANGUAGE_PHRASES.ONLINE;
-			else if(!member.user.isOnline && member.user.lastSeen)
-				conversation.status = LANGUAGE_PHRASES.LAST_SEEN + this.utility.updateTimeFormat(member.user.lastSeen);
+		if(!conversation || conversation.isModified)
+			return conversation;
+
+		if (!conversation.isGroup && conversation.user && Object.entries(conversation.user).length === 0) {
+			conversation.title = LANGUAGE_PHRASES.DELETED_MEMBER;
+			conversation.profileImageUrl = IMAGES.AVTAR;
+			return conversation;
+    	}
+
+	    // Set profile Image, title and status of conversation
+		if(conversation.isGroup) {
+			conversation.profileImageUrl = conversation.profileImageUrl ? conversation.profileImageUrl : IMAGES.GROUP;
+			conversation.status = conversation.memberCount + " " + LANGUAGE_PHRASES.MEMBERS;
 		}
 		else {
-			conversation.status = conversation.memberCount + " " + LANGUAGE_PHRASES.MEMBERS;
+			conversation.profileImageUrl = conversation.user.profileImageUrl ? conversation.user.profileImageUrl : IMAGES.AVTAR;
+			conversation.title = conversation.user.displayName;
 
+			// Set block user status
+			let member = conversation.members.find(member => member.userId == conversation.user.id);
+			conversation.blockedByMember = member ? false : true;
+
+			if(!conversation.isActive) {
+				conversation.blockedByUser = true;
+			}
+
+			if(conversation.user.isOnline) {
+				conversation.status = LANGUAGE_PHRASES.ONLINE;
+			}
+			else {
+				conversation.status = LANGUAGE_PHRASES.LAST_SEEN + this.utility.updateTimeFormat(member.user.lastSeen);
+			}
 		}
 		return conversation;
 	}
@@ -336,13 +346,12 @@ class ConversationWindow {
 	_loadMoreMessages() {
 		++this.loadCount;
 		this.skip = this.loadCount * this.limit;
-		this._getMessages(this.conversation, this.limit, this.skip, (err, messages) => {
+		this._getMessages(this.conversation, this.limit, this.skip, null, null, null, null, (err, messages) => {
 			if(err) return console.error(err);
 
-			if(!messages && messages[0].chatId != this.conversation.id)
+			if(!messages && messages[0].conversationId != this.conversation.id)
 				return;
 
-			messages.reverse();
 			this.messages = this.messages.concat(messages);
 
 			// Save first message to scroll
@@ -351,12 +360,14 @@ class ConversationWindow {
 
 			messages.forEach(message => {
 
-				// Remove meta message
-				if(message.contentType == 1)
-					return;
-
 				// Update message object
 				message = this._modifyMessage(message);
+
+				if(message.type == "admin") {
+					let metaMessageAttributes = [{"class":"ch-admin-msg"}];
+					this.utility.createElement("div", metaMessageAttributes, message.body, messagesBox);
+					return;
+				}
 
 				// Create message list
 				let msgListAttributes = [{"id":message.id},{"class":"ch-msg-list"}];
@@ -377,18 +388,18 @@ class ConversationWindow {
 				let msgDiv = this.utility.createElement("div", msgDivAttributes, message.body, msgContainer);
 
 				// Create media message frame
-				this._createMediaMessageFrame(message);
+				this._createMediaMessageFrame(message, msgDiv);
 
 				// Create message time span
 				let msgTimeAttributes = [{"id":"ch_msg_time"},{"class":"ch-msg-time"}];
 				let msgTime = this.utility.createElement("span", msgTimeAttributes, message.createdAt, msgContainer);
 
-				if(message.ownerId == window.userId) {
+				if(message.ownerId == this.widget.userId) {
 					msgContainer.classList.add("right");
 					moreOption.classList.add("left");
 					// Create message read status
 					let statusAttributes = [{"id":"ch_msg_status"}];
-					let readIcon = message.readStatus == 3 ? "done_all" : "check";
+					let readIcon = message.readByAll ? "done_all" : "check";
 					let msgStatus = this.utility.createElement("i", statusAttributes, readIcon, msgContainer);
 					msgStatus.classList.add("material-icons", "ch-msg-status");
 				}
@@ -403,7 +414,6 @@ class ConversationWindow {
 				firstMessage.scrollIntoView();
 			}
 		});
-
 	}
 
 	_registerClickEventHandlers() {
@@ -414,50 +424,43 @@ class ConversationWindow {
 			this.widget.convWindows.pop();
 		});
 
-		// Conversation option listener
+		// Conversation option button listener
 		let optionBtn = document.getElementById("ch_conv_options");
 		optionBtn.addEventListener("click", (data) => {
 			document.getElementById("ch_conv_drop_down").classList.toggle("ch-show-element");
 		});
 
-		// Conversation mute listener
-		let muteBtn = document.getElementById("ch_conv_mute");
-		muteBtn.addEventListener("click", (data) => {
-			document.getElementById("ch_conv_drop_down").classList.toggle("ch-show-element");
-			this.muteConversation();
-		});
-
-		// Conversation clear listener
+		// Conversation clear button listener
 		let clearBtn = document.getElementById("ch_conv_clear");
 		clearBtn.addEventListener("click", (data) => {
 			document.getElementById("ch_conv_drop_down").classList.toggle("ch-show-element");
 			this.clearConversation();
 		});
 
-		// Conversation delete listener
+		// Conversation delete button listener
 		let deleteBtn = document.getElementById("ch_conv_delete");
 		deleteBtn.addEventListener("click", (data) => {
 			document.getElementById("ch_conv_drop_down").classList.toggle("ch-show-element");
 			this.deleteConversation();
 		});
 
-		// Member block listener
+		// Member block  button listener
 		let blockBtn = document.getElementById("ch_conv_block");
 		if(blockBtn) {
 			blockBtn.addEventListener("click", (data) => {
 				document.getElementById("ch_conv_drop_down").classList.toggle("ch-show-element");
-				this.chAdapter.blockMember(this.conversation.member.userId, (err, res) => {
+				this.chAdapter.blockMember(this.conversation.user.id, (err, res) => {
 					if(err) return console.error(err);
 				});
 			});
 		}
 
-		// Member unblock listener
+		// Member unblock button listener
 		let unblockBtn = document.getElementById("ch_conv_unblock");
 		if(unblockBtn) {
 			unblockBtn.addEventListener("click", (data) => {
 				document.getElementById("ch_conv_drop_down").classList.toggle("ch-show-element");
-				this.chAdapter.unblockMember(this.conversation.member.userId, (err, res) => {
+				this.chAdapter.unblockMember(this.conversation.user.id, (err, res) => {
 					if(err) return console.error(err);
 				});
 			});
@@ -494,8 +497,10 @@ class ConversationWindow {
 		// Send message on image choose
 		let imageInput = document.getElementById("ch_image_input");
 		imageInput.addEventListener("change", (data) => {
-			if(data.target.files[0].size > 25000000)
-				this._showSnackbar(LANGUAGE_PHRASES.FILE_SIZE_WARNING);
+			if(data.target.files[0].size > 25000000) {
+				this.utility.showWarningMsg(LANGUAGE_PHRASES.FILE_SIZE_WARNING);
+				document.getElementById("ch_media_docker").classList.remove("ch-show-docker");
+			}
 			else
 				this.sendMessage("image");
 		});
@@ -503,8 +508,10 @@ class ConversationWindow {
 		// Send message on audio choose
 		let audioInput = document.getElementById("ch_audio_input");
 		audioInput.addEventListener("change", (data) => {
-			if(data.target.files[0].size > 25000000)
-				this._showSnackbar(LANGUAGE_PHRASES.FILE_SIZE_WARNING);
+			if(data.target.files[0].size > 25000000) {
+				this.utility.showWarningMsg(LANGUAGE_PHRASES.FILE_SIZE_WARNING);
+				document.getElementById("ch_media_docker").classList.remove("ch-show-docker");
+			}
 			else
 				this.sendMessage("audio");
 		});
@@ -512,26 +519,30 @@ class ConversationWindow {
 		// Send message on video choose
 		let videoInput = document.getElementById("ch_video_input");
 		videoInput.addEventListener("change", (data) => {
-			if(data.target.files[0].size > 25000000)
-				this._showSnackbar(LANGUAGE_PHRASES.FILE_SIZE_WARNING);
+			if(data.target.files[0].size > 25000000) {
+				this.utility.showWarningMsg(LANGUAGE_PHRASES.FILE_SIZE_WARNING);
+				document.getElementById("ch_media_docker").classList.remove("ch-show-docker");
+			}
 			else
 				this.sendMessage("video");
 		});
 	}
 
-	_showSnackbar(text) {
-		// Show size limit exceed message
-		let snackbar = document.getElementById("ch_snackbar");
-		snackbar.innerText = text;
-		snackbar.className = "show";
-		setTimeout(function() {
-			snackbar.className = snackbar.className.replace("show", "");
-		}, 3000);
-	}
-
 	sendMessage(msgType) {
 		// Hide file picker
 		document.getElementById("ch_media_docker").classList.remove("ch-show-docker");
+
+		// Show loader image if media message
+		if(msgType != "text") {
+			if(document.getElementById("ch_no_msg"))
+				document.getElementById("ch_no_msg").remove();
+
+			let messagesBox = document.getElementById("ch_messages_box");
+			let msgLoaderAttributes = [{"id":"ch_msg_loader"},{"class":"ch-msg-loader"}];
+			let imageMsg = this.utility.createElement("div", msgLoaderAttributes, null, messagesBox);
+			imageMsg.style.backgroundImage = "url(" + IMAGES.MESSAGE_LOADER + ")";
+			imageMsg.scrollIntoView();
+		}
 
 		if(msgType == "text") {
 			let inputValue = document.getElementById("ch_input_box").value;
@@ -541,12 +552,23 @@ class ConversationWindow {
 				return;
 
 			if(this.conversation.isDummyObject) {
-				this.chAdapter.sendTextMessageToUser(this.conversation.userId, inputValue, (err, res) => {
+				let data = {
+					type : "normal",
+					userId : this.conversation.userId,
+					body : inputValue
+				}
+
+				this.chAdapter.sendMessageToUser(data, (err, res) => {
 					if(err) return console.error(err);
 				});
 			}
 			else {
-				this.chAdapter.sendTextMessage(this.conversation, inputValue, [], (err, res) => {
+				let data = {
+					type : "normal",
+					body : inputValue
+				}
+
+				this.chAdapter.sendMessage(this.conversation, data, (err, res) => {
 					if(err) return console.error(err);
 				});
 			}
@@ -554,30 +576,54 @@ class ConversationWindow {
 		else if(msgType == "image") {
 			let file = document.getElementById("ch_image_input").files[0];
 
-			this.chAdapter.sendFileMessage(this.conversation, file, true, (err, message) => {
+			// Upload file on channelize server
+			this.chAdapter.uploadFile(file, true, (err, fileData) => {
 				if(err) return console.error(err);
+
+				this._sendFileMessage(fileData);
 			});
 		}
 		else if(msgType == "audio") {
 			let file = document.getElementById("ch_audio_input").files[0];
 
-			this.chAdapter.sendFileMessage(this.conversation, file, true, (err, message) => {
+			// Upload file on channelize server
+			this.chAdapter.uploadFile(file, true, (err, fileData) => {
 				if(err) return console.error(err);
+
+				this._sendFileMessage(fileData);
 			});
 		}
 		else if(msgType == "video") {
 			let file = document.getElementById("ch_video_input").files[0];
-
-			this.chAdapter.sendFileMessage(this.conversation, file, true, (err, message) => {
+			// Upload file on channelize server
+			this.chAdapter.uploadFile(file, true, (err, fileData) => {
 				if(err) return console.error(err);
+
+				this._sendFileMessage(fileData);
 			});
 		}
 	}
 
-	muteConversation() {
-		this.chAdapter.muteConversation(this.conversation, (err, res) => {
-			if(err) return console.error(err);
-		});
+	_sendFileMessage(fileData) {
+		fileData.type = fileData.attachmentType;
+
+		let data = {
+			type : "normal",
+			attachments : [fileData]
+		}
+
+		// Send file message as attachment
+		if(this.conversation.isDummyObject) {
+			data['userId'] = this.conversation.userId;
+			this.chAdapter.sendMessageToUser(data, (err, message) => {
+				if(err) return console.error(err);
+			});
+		}
+		else {
+			this.chAdapter.sendMessage(this.conversation, data, (err, message) => {
+				if(err) return console.error(err);
+			});
+		}
 	}
 
 	clearConversation() {
@@ -592,8 +638,8 @@ class ConversationWindow {
 		});
 	}
 
-	_getMessages(conversation, limit, skip, cb) {
-		this.chAdapter.getMessages(conversation, limit, skip, (err, messages) => {
+	_getMessages(conversation, limit, skip, ids, types, attachmentTypes, ownerIds, cb) {
+		this.chAdapter.getMessages(conversation, limit, skip,  ids, types, attachmentTypes, ownerIds, (err, messages) => {
 			if(err) return cb(err);
 
 			messages.reverse();
@@ -603,27 +649,79 @@ class ConversationWindow {
 
 	_modifyMessage(message) {
 		if(!message)
+			return message;
+
+		// Handle meta message
+		if(message.type == "admin") {
+
+			// adminMessageType
+			switch(message.body) {
+				case "admin_group_create" :
+					message.body = LANGUAGE_PHRASES.GROUP_CREATED;
+					break;
+
+				case "admin_group_change_photo" :
+					message.body = LANGUAGE_PHRASES.GROUP_PHOTO_CHANGED;
+					break;
+
+				case "admin_group_change_title" :
+					message.body = LANGUAGE_PHRASES.GROUP_TITLE_CHANGED;
+					break;
+
+				case "admin_group_add_members" :
+					message.body = LANGUAGE_PHRASES.GROUP_MEMBER_ADDED;
+					break;
+
+				case "admin_group_remove_members" :
+					message.body = LANGUAGE_PHRASES.GROUP_MEMBER_REMOVED;
+					break;
+
+				case "admin_group_make_admin" :
+					message.body = LANGUAGE_PHRASES.GROUP_ADMIN_UPDATED;
+					break;
+			}
+			return message;
+		}
+
+		// Set read status of message
+		if(!this.conversation.isDummyObject) {
+			message.readByAll = this.chAdapter.readByAllMembers(this.conversation, message);
+		}
+
+	    message.createdAt = this.utility.updateTimeFormat(message.createdAt);
+
+	    if(message.isDeleted) {
+	    	message.body = "<i>" + LANGUAGE_PHRASES.MESSAGE_DELETED;
+	    }
+
+	    return message;
+	}
+
+	_markAsRead(conversation) {
+		let currentDate = new Date();
+		let timestamp = currentDate.toISOString();
+	  	this.chAdapter.markAsReadConversation(conversation, timestamp, (err, res) => {
+	  		if(err) return console.error(err);
+	  	});
+	}
+
+	addNewMessage(message) {
+		message = this._modifyMessage(message);
+		this.messages.push(message);
+
+		let messagesBox = document.getElementById("ch_messages_box");
+		if(message.type == "admin") {
+			let metaMessageAttributes = [{"class":"ch-admin-msg"}];
+			this.utility.createElement("div", metaMessageAttributes, message.body, messagesBox);
 			return;
+		}
 
-		let member = message.recipients.find(member => member.recipientId == window.userId);
-    message.createdAt = this.utility.updateTimeFormat(member.createdAt);
-    message.readStatus = member.status;
+		// Hide message loader
+		if(document.getElementById("ch_msg_loader") && message.ownerId == this.widget.userId) {
+			document.getElementById("ch_msg_loader").remove();
+		}
 
-    if(message.isDeleted)
-    	message.body = "<i>" + LANGUAGE_PHRASES.MESSAGE_DELETED;
-
-    return message;
-  }
-
-  _markAsRead(conversation) {
-  	this.chAdapter.markAsReadConversation(conversation, (err, res) => {
-  		if(err) return console.error(err);
-  	});
-  }
-
-  addNewMessage(message) {
-  	let messagesBox = document.getElementById("ch_messages_box");
-		if(message.chatId != this.conversation.id || !messagesBox)
+		if(message.conversationId != this.conversation.id || !messagesBox)
 			return;
 
 		message.createdAt = this.utility.updateTimeFormat(Date());
@@ -651,19 +749,19 @@ class ConversationWindow {
 		let msgDiv = this.utility.createElement("div", msgDivAttributes, message.body, msgContainer);
 
 		// Create media message frame
-		this._createMediaMessageFrame(message);
+		this._createMediaMessageFrame(message, msgDiv);
 
 		// Create message time span
 		let msgTimeAttributes = [{"id":"ch_msg_time"},{"class":"ch-msg-time"}];
 		let msgTime = this.utility.createElement("span", msgTimeAttributes, message.createdAt, msgContainer);
 
 
-		if(message.ownerId == window.userId) {
+		if(message.ownerId == this.widget.userId) {
 			msgContainer.classList.add("right");
 			moreOption.classList.add("left");
 			// Create message read status
 			let statusAttributes = [{"id":"ch_msg_status"}];
-			let readIcon = message.readStatus == 3 ? "done_all" : "check";
+			let readIcon = message.readByAll ? "done_all" : "check";
 			let msgStatus = this.utility.createElement("i", statusAttributes, readIcon, msgContainer);
 			msgStatus.classList.add("material-icons", "ch-msg-status");
 		}
@@ -678,84 +776,124 @@ class ConversationWindow {
 		// Scroll to new message
 		if(messagesBox)
 			messagesBox.scrollTop = messagesBox.scrollHeight;
-  }
+	}
 
-  updateStatus(user) {
-  	if(this.conversation.isGroup || (this.conversation.member && this.conversation.member.userId != user.id))
-  		return;
+	updateMsgStatus(data) {
+		if(data.conversation.id != this.conversation.id)
+			return;
 
-  	if(user.isOnline) {
-  		this.conversation.status = LANGUAGE_PHRASES.ONLINE;
-  	}
-  	else if(!user.isOnline && user.lastSeen) {
-  		this.conversation.status = LANGUAGE_PHRASES.LAST_SEEN + this.utility.updateTimeFormat(user.lastSeen);
-  	}
-  	document.getElementById("ch_conv_status").innerText = this.conversation.status;
-  }
+		if(!this.conversation.isGroup) {
+			if(this.messages[this.messages.length-2].readByAll) {
+				let lastMessage = this.messages[this.messages.length-1];
+				lastMessage.readByAll = true;
 
-	_createMediaMessageFrame(message) {
-  	let messageBox = document.getElementById("ch_message_"+message.id);
+				// Update read tag icon
+				let msgDiv = document.getElementById(lastMessage.id);
+				if(msgDiv) {
+					let statusDiv = msgDiv.querySelector("#ch_msg_status");
 
-  	// Create message div
-  	if(!message.contentType && message.attachmentType != "text") {
-  		let attachmentData = Object.keys(message.attachment).length != 0 ? message.attachment : message.fileData;
+					if(statusDiv) {
+						statusDiv.innerHTML = "done_all";
+					}
+				}
+			}
+			else {
+				this.messages.forEach(msg => {
+					msg.readByAll = true;
 
-  		if(message.attachmentType == "audio") {
-  			let audioMsgAttributes = [{"id":"ch_audio_message"},{"class":"ch-audio-message"},{"src":attachmentData.fileUrl}];
-				let audioTag = this.utility.createElement("audio", audioMsgAttributes, null, messageBox);
-				audioTag.setAttribute("controls",true);
-  		}
-  		else if(message.attachmentType == "video") {
-  			let videoMsgAttributes = [{"id":"ch_video_message"},{"class":"ch-video-message"}];
-				let videoMessage = this.utility.createElement("div", videoMsgAttributes, null, messageBox);
-				videoMessage.style.backgroundImage = "url(" + attachmentData.thumbnailUrl + ")";
+					// Update read tag icon
+					let msgDiv = document.getElementById(msg.id);
+					if(msgDiv) {
+						let statusDiv = msgDiv.querySelector("#ch_msg_status");
 
-				// Create play icon
-				let playIconAttributes = [{"id":"ch_play_icon"}];
-				let playIcon = this.utility.createElement("i", playIconAttributes, "play_circle_outline", videoMessage);
-				playIcon.classList.add("material-icons", "ch-play-icon");
-
-				// Set video message listener
-				videoMessage.addEventListener("click", data => {
-					window.open(attachmentData.fileUrl, "_blank");
+						if(statusDiv) {
+							statusDiv.innerHTML = "done_all";
+						}
+					}
 				});
-  		}
-  		else {
-  			let imageMsgAttributes = [{"id":"ch_image_message"},{"class":"ch-image-message"}];
-				let imageMsg = this.utility.createElement("div", imageMsgAttributes, null, messageBox);
-				imageMsg.style.backgroundImage = "url(" + attachmentData.thumbnailUrl + ")";
+			}
+		}
+	}
 
-				// Set image message listener
-				imageMsg.addEventListener("click", data => {
-					window.open(attachmentData.fileUrl, "_blank");
-				});
-  		}
-  	}
-  	else if(message.contentType == 2) {
-  		let stickerMsgAttributes = [{"id":"ch_sticker_message"},{"class":"ch-sticker-message"}];
-			let stickerMsg = this.utility.createElement("div", stickerMsgAttributes, null, messageBox);
-			stickerMsg.style.backgroundImage = "url(" + message.originalUrl + ")";
+	updateUserStatus(user) {
+		if(this.conversation.isGroup || !this.conversation.user || (this.conversation.user.id != user.id))
+			return;
 
-  	}
-  	else if(message.contentType == 3) {
-  		let locationSrc = SETTINGS.LOCATION_IMG_URL + "?center=" +
-  		message.data.latitude + "," + message.data.longitude + "&zoom=15&size=208x100&maptype=roadmap&markers=color:red%7C" +
-  		message.data.latitude + "," + message.data.longitude + "&key=" + SETTINGS.LOCATION_API_KEY;
+		if(user.isOnline) {
+			this.conversation.status = LANGUAGE_PHRASES.ONLINE;
+		}
+		else if(!user.isOnline && user.lastSeen) {
+			this.conversation.status = LANGUAGE_PHRASES.LAST_SEEN + this.utility.updateTimeFormat(user.lastSeen);
+		}
+		document.getElementById("ch_conv_status").innerText = this.conversation.status;
+	}
 
-  		let locationMsgAttributes = [{"id":"ch_location_message"},{"class":"ch-location-message"}];
-		let locationMsg = this.utility.createElement("div", locationMsgAttributes, null, messageBox);
-		locationMsg.style.backgroundImage = "url(" + locationSrc + ")";
+	_createMediaMessageFrame(message, parentDiv) {
 
-		// Set location message listener
-		locationMsg.addEventListener("click", data => {
-			let mapUrl = "https://www.google.com/maps?z=15&t=m&q=loc:"+message.data.latitude+","+message.data.longitude;
-			window.open(mapUrl, "_blank");
-		});
-  	}
-  }
+	  	// Create message div
+	  	if(!message.body && Object.keys(message.attachments).length != 0) {
+	  		message.attachments.forEach(attachment => {
 
-  _addListenerOnMoreOption(message, moreOption, msgList) {
+		  		if(attachment.type == "audio") {
+		  			let audioMsgAttributes = [{"id":"ch_audio_message"},{"class":"ch-audio-message"},{"src":attachment.fileUrl}];
+					let audioTag = this.utility.createElement("audio", audioMsgAttributes, null, parentDiv);
+					audioTag.setAttribute("controls",true);
+		  		}
+		  		else if(attachment.type == "video") {
+		  			let videoMsgAttributes = [{"id":"ch_video_message"},{"class":"ch-video-message"}];
+					let videoMessage = this.utility.createElement("div", videoMsgAttributes, null, parentDiv);
+					videoMessage.style.backgroundImage = "url(" + attachment.thumbnailUrl + ")";
 
+					// Create play icon
+					let playIconAttributes = [{"id":"ch_play_icon"}];
+					let playIcon = this.utility.createElement("i", playIconAttributes, "play_circle_outline", videoMessage);
+					playIcon.classList.add("material-icons", "ch-play-icon");
+
+					// Set video message listener
+					videoMessage.addEventListener("click", data => {
+						window.open(attachment.fileUrl, "_blank");
+					});
+		  		}
+		  		else if(attachment.type == "sticker") {
+		  			let stickerMsgAttributes = [{"id":"ch_sticker_message"},{"class":"ch-sticker-message"}];
+					let stickerMsg = this.utility.createElement("div", stickerMsgAttributes, null, parentDiv);
+					stickerMsg.style.backgroundImage = "url(" + attachment.originalUrl + ")";
+		  		}
+		  		else if(attachment.type == "gif") {
+		  			let stickerMsgAttributes = [{"id":"ch_gif_message"},{"class":"ch-sticker-message"}];
+					let stickerMsg = this.utility.createElement("div", stickerMsgAttributes, null, parentDiv);
+					stickerMsg.style.backgroundImage = "url(" + attachment.originalUrl + ")";
+		  		}
+		  		else if(attachment.type == "location") {
+		  			let locationSrc = SETTINGS.LOCATION_IMG_URL + "?center=" +
+			  		attachment.latitude + "," + attachment.longitude + "&zoom=15&size=208x100&maptype=roadmap&markers=color:red%7C" +
+			  		attachment.latitude + "," + attachment.longitude + "&key=" + SETTINGS.LOCATION_API_KEY;
+
+			  		let locationMsgAttributes = [{"id":"ch_location_message"},{"class":"ch-location-message"}];
+					let locationMsg = this.utility.createElement("div", locationMsgAttributes, null, parentDiv);
+					locationMsg.style.backgroundImage = "url(" + locationSrc + ")";
+
+					// Set location message listener
+					locationMsg.addEventListener("click", data => {
+						let mapUrl = "https://www.google.com/maps?z=15&t=m&q=loc:"+attachment.latitude+","+attachment.longitude;
+						window.open(mapUrl, "_blank");
+					});
+		  		}
+		  		else {
+		  			let imageMsgAttributes = [{"id":"ch_image_message"},{"class":"ch-image-message"}];
+					let imageMsg = this.utility.createElement("div", imageMsgAttributes, null, parentDiv);
+					imageMsg.style.backgroundImage = "url(" + attachment.thumbnailUrl + ")";
+
+					// Set image message listener
+					imageMsg.addEventListener("click", data => {
+						window.open(attachment.fileUrl, "_blank");
+					});
+		  		}
+		  	});
+	  	}
+	}
+
+	_addListenerOnMoreOption(message, moreOption, msgList) {
 		moreOption.addEventListener("click", (data) => {
 			if(document.getElementById("ch_msg_option_container")) {
 				document.getElementById("ch_msg_option_container").remove();
@@ -766,7 +904,7 @@ class ConversationWindow {
 			let msgOptionsContainerAttributes = [{"id":"ch_msg_option_container"},{"class":"ch-msg-option-container"}];
 			let msgOptionsContainer = this.utility.createElement("div", msgOptionsContainerAttributes, null, msgList);
 
-			if(message.ownerId == window.userId)
+			if(message.ownerId == this.widget.userId)
 				msgOptionsContainer.style.left = "15px";
 			else
 				msgOptionsContainer.style.right = "15px";
@@ -785,7 +923,7 @@ class ConversationWindow {
 				})
 			});
 
-			if(!message.isDeleted && message.ownerId == window.userId) {
+			if(!message.isDeleted && message.ownerId == this.widget.userId) {
 				// Create delete message for everyone option
 				let deleteMsgEveryoneAttributes = [{"id":"ch_msg_delete_for_everyone"},{"class":"ch-msg-delete-for-everyone"}];
 				let deleteMsgEveryoneOption = this.utility.createElement("div", deleteMsgEveryoneAttributes, LANGUAGE_PHRASES.DELETE_FOR_EVERYONE, msgOptionsContainer);
@@ -801,39 +939,63 @@ class ConversationWindow {
 				});
 			}
 		});
-  }
+	}
 
-  updateDeleteForEveryoneMsg(msgData) {
-  	// Update text of deleted message
-  	let convTargetMsg = document.getElementById("ch_message_" + msgData.deletedIds[0]);
-			if(convTargetMsg) {
-				convTargetMsg.innerHTML = "<i>" + LANGUAGE_PHRASES.MESSAGE_DELETED;
-			}
+	updateDeleteForEveryoneMsg(data) {
+		if(this.conversation.id != data.conversation.id)
+			return;
+
+	  	// Update text of deleted message
+	  	let convTargetMsg = document.getElementById("ch_message_" + data.messages[0].id);
+		if(convTargetMsg) {
+			convTargetMsg.innerHTML = "<i>" + LANGUAGE_PHRASES.MESSAGE_DELETED;
+		}
 
 		// Update listener of deleted message
-  	let deletedMsgOptionBtn = document.getElementById(msgData.deletedIds[0]).lastChild;
-  	deletedMsgOptionBtn.addEventListener("click", data => {
-  		// Remove delete for everyone option
-  		let deleteForEveryoneBtn = document.getElementById("ch_msg_delete_for_everyone");
-  		if(deleteForEveryoneBtn) {
-  			deleteForEveryoneBtn.remove();
-  		}
-  	});
-  }
+	  	let deletedMsgOptionBtn = document.getElementById(data.messages[0].id).lastChild;
+	  	deletedMsgOptionBtn.addEventListener("click", data => {
+	  		// Remove delete for everyone option
+	  		let deleteForEveryoneBtn = document.getElementById("ch_msg_delete_for_everyone");
+	  		if(deleteForEveryoneBtn) {
+	  			deleteForEveryoneBtn.remove();
+	  		}
+	  	});
+	}
 
-  handleBlock(self, userId) {
-  	document.getElementById("ch_conv_block").style.display = "none";;
-  	document.getElementById("ch_conv_unblock").style.display = "block";
-  	document.getElementById("ch_conv_status").style.visibility = "hidden";
+	handleBlock(data) {
+		if(this.conversation.isGroup)
+			return;
+
+		if(this.conversation.user.id == data.blockee.id) {
+			document.getElementById("ch_conv_block").style.display = "none";;
+			document.getElementById("ch_conv_unblock").style.display = "block";
+		}
+
+		// Hide status and input field
+		document.getElementById("ch_conv_status").style.visibility = "hidden";
 		document.getElementById("ch_send_box").style.visibility = "hidden";
-  }
+	}
 
-  handleUnblock(self, userId) {
-  	document.getElementById("ch_conv_unblock").style.display = "none";
-  	document.getElementById("ch_conv_block").style.display = "block";
-  	document.getElementById("ch_conv_status").style.visibility = "visible";
+	handleUnblock(data) {
+		if(this.conversation.isGroup)
+			return;
+
+		if(this.conversation.user.id == data.unblockee.id) {
+			document.getElementById("ch_conv_unblock").style.display = "none";
+	  		document.getElementById("ch_conv_block").style.display = "block";
+		}
+
+		// Show status and input field
+		document.getElementById("ch_conv_status").style.visibility = "visible";
 		document.getElementById("ch_send_box").style.visibility = "visible";
-  }
+	}
+
+  	handleClearConversation(conv) {
+  		if(conv.id != this.conversation.id)
+  			return;
+
+  		document.getElementById("ch_messages_box").innerHTML = "";
+  	}
 }
 
 export { ConversationWindow as default };
