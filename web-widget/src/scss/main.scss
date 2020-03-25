@@ -15,6 +15,9 @@ ul {
 .right {
   float: right;
 }
+.ch-text-pointer {
+  cursor: text !important;
+}
 .ch-loader-bg {
   position: absolute;
   height: inherit;
@@ -150,7 +153,7 @@ ul {
   }
 }
 /*screen window common style*/
-.ch-login-window, .ch-conv-window, .ch-search-window, .ch-recent-window {
+.ch-login-window, .ch-conv-window, .ch-search-window, .ch-recent-window, .ch-members-window {
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
   position: fixed;
@@ -504,6 +507,7 @@ ul {
         color: $ch-title-color;
         text-transform: capitalize;
         font-size: $ch-title-fontsize;
+        cursor: pointer;
       }
       .ch-conv-options {
         vertical-align: middle;
@@ -836,3 +840,76 @@ ul {
   }
 }
 /*conversation style end here*/
+
+/*Members style start here*/
+
+.ch-members-window {
+  right: 24%;
+  top: 35%;
+  bottom: 0;
+  width: 22%;
+  background-color: #fff;
+  box-shadow: rgba(0,0,0,.3) 0 0 1.2em;
+  .ch-header {
+    line-height: 35px;
+    text-align: center;
+    color: $ch-title-color;
+    i#ch_members_close_btn {
+      position: absolute;
+      left: 10px;      
+      top: 17px;
+      color: $ch-recent-conversation-header-font-icon-color;
+      &:hover {
+        color: $ch-recent-conversation-header-font-icon-hover-color;
+      }
+    }    
+  }
+  .ch-members-box {
+    height: calc(100% - 92px);
+    overflow: auto;
+    li {
+      cursor: pointer;
+      list-style: none;
+      position: relative;
+      padding: 10px;
+      min-height: 32px;
+      border-bottom: 1px solid rgba(90,122,190,.08);
+      .ch-member-img {
+        height: 32px;
+        width: 32px;
+        border-radius: 50%;
+        float: left;
+        margin-right: 10px;
+        position: relative;
+        background-size: cover; 
+        .ch-online-icon {
+          background: #64ba00;
+          border-radius: 50%;
+          border: 2px solid #fff;
+          bottom: 0;
+          position: absolute;
+          right: 1px;
+          width: 6px;
+          height: 6px;
+          display: none;
+        }
+      }
+      .ch-member-name {
+        width: 180px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        padding-right: 5px;
+        font-size: 13px;
+        display: inline-block;
+        vertical-align: middle;
+        color: #4a505a;
+        font-weight: 400;
+        margin-top: 8px;
+        text-transform: capitalize;
+      }
+    }
+  }
+}
+
+/*Members style end here*/

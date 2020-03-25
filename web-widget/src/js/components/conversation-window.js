@@ -67,7 +67,13 @@ class ConversationWindow {
 
 		// Create conversation header title
 		let titleAttributes = [{"class":"ch-conv-title"}];
-		this.utility.createElement("div", titleAttributes, conversation.title, detailsWrapper);
+		let headerTitle = this.utility.createElement("div", titleAttributes, conversation.title, detailsWrapper);
+
+		if(this.conversation.isGroup) {
+			headerTitle.addEventListener("click", (data) => {
+				this.widget.loadConversationMembers(this.conversation.id);
+			});
+		}
 
 		// Create option button
 		let optionAttributes = [{"id":"ch_conv_options"}];

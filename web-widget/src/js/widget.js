@@ -2,6 +2,7 @@ import '../scss/main.scss';
 import ChannelizeAdapter from "./adapter.js";
 import Utility from "./utility.js";
 import Login from "./components/login.js";
+import Members from "./components/members.js";
 import RecentConversations from "./components/recent-conversations.js";
 import ConversationWindow from "./components/conversation-window.js";
 import { LANGUAGE_PHRASES, IMAGES } from "./constants.js";
@@ -24,7 +25,7 @@ class ChannelizeWidget {
 	}
 
 	// Load channelize
-	load() {
+	load(cb) {
 		// Check for already login user
 		let userId = this.getCookie("ch_user_id");
 		let accessToken = this.getCookie("ch_access_token");
@@ -35,6 +36,7 @@ class ChannelizeWidget {
 
 				this.userId = userId;
 				this._createLauncher();
+				cb(null, res);
 			});
 		}
 		else {
@@ -52,13 +54,14 @@ class ChannelizeWidget {
 	}
 
 	// Connect and load channelize
-	loadWithUserId(userId, accessToken) {
+	loadWithUserId(userId, accessToken, cb) {
 		this.connect(userId, accessToken, (err, res) => {
 			if(err) return console.error(err);
 
 			this.userId = userId;
 			this.setCookie(userId, accessToken, 30);
 			this._createLauncher();
+			cb(null, res);
 		});
 	}
 
@@ -179,6 +182,15 @@ class ChannelizeWidget {
 			this.convWindows.forEach(conversationWindow => {
 				conversationWindow.updateUserStatus(data.user);
 			});
+
+			if(document.getElementById(data.user.id+"_member_online_icon")) {
+				if(data.user.isOnline) {
+					document.getElementById(data.user.id+"_member_online_icon").classList.add("ch-show-element");
+				}
+				else {
+					document.getElementById(data.user.id+"_member_online_icon").classList.remove("ch-show-element");
+				}
+			}
 		});
 
 		// Handle clear conversation
@@ -301,6 +313,10 @@ class ChannelizeWidget {
 				this.convWindows.push(conversationWindow);
 			});
 		}
+	}
+
+	loadConversationMembers(conversationId) {
+		new Members(this, conversationId);
 	}
 }
 
