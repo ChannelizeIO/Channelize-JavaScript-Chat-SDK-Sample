@@ -112,13 +112,31 @@ class ChannelizeWidget {
 	_registerChEventHandlers() {
 		// Handle new message
 		window.channelize.chsocket.on('user.message_created', (data) => {
-			if(this.recentConversations) {
-				this.recentConversations.updateNewMessage(data.message);
-			}
 
-			this.convWindows.forEach(conversationWindow => {
-				conversationWindow.addNewMessage(data.message);
-			});
+			// Get conversation is does not exist
+			if(!document.getElementById(data.message.conversationId)) {
+				this.chAdapter.getConversation(data.message.conversationId, (err, conversation) => {
+					if(err) return console.error(err);
+
+					if(this.recentConversations) {
+						this.recentConversations.updateNewMessage(data.message, conversation);
+					}
+
+					this.convWindows.forEach(conversationWindow => {
+						conversationWindow.addNewMessage(data.message, conversation);
+					});
+				});
+
+			}
+			else {
+				if(this.recentConversations) {
+					this.recentConversations.updateNewMessage(data.message);
+				}
+
+				this.convWindows.forEach(conversationWindow => {
+					conversationWindow.addNewMessage(data.message);
+				});
+			}
 		});
 
 		// Handle delete message for me

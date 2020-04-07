@@ -1,4 +1,5 @@
 import Utility from "../utility.js";
+import { v4 as uuid } from 'uuid';
 import { LANGUAGE_PHRASES, IMAGES, SETTINGS } from "../constants.js";
 
 class ConversationWindow {
@@ -312,7 +313,6 @@ class ConversationWindow {
 	}
 
 	modifyConversation(conversation) {
-
 		if(!conversation || conversation.isModified)
 			return conversation;
 
@@ -537,13 +537,13 @@ class ConversationWindow {
 	sendMessage(msgType) {
 		// Hide file picker
 		document.getElementById("ch_media_docker").classList.remove("ch-show-docker");
+		let messagesBox = document.getElementById("ch_messages_box");
 
 		// Show loader image if media message
 		if(msgType != "text") {
 			if(document.getElementById("ch_no_msg"))
 				document.getElementById("ch_no_msg").remove();
 
-			let messagesBox = document.getElementById("ch_messages_box");
 			let msgLoaderAttributes = [{"id":"ch_msg_loader"},{"class":"ch-msg-loader"}];
 			let imageMsg = this.utility.createElement("div", msgLoaderAttributes, null, messagesBox);
 			imageMsg.style.backgroundImage = "url(" + IMAGES.MESSAGE_LOADER + ")";
@@ -557,23 +557,23 @@ class ConversationWindow {
 			if(!inputValue.trim())
 				return;
 
+			let data = {
+				id : uuid(),
+				type : "normal",
+				body : inputValue
+			}
+
+			// Add pending message into list
+			this.addPendingMessage(data);
+
 			if(this.conversation.isDummyObject) {
-				let data = {
-					type : "normal",
-					userId : this.conversation.userId,
-					body : inputValue
-				}
+				data['userId'] = this.conversation.userId;
 
 				this.chAdapter.sendMessageToUser(data, (err, res) => {
 					if(err) return console.error(err);
 				});
 			}
 			else {
-				let data = {
-					type : "normal",
-					body : inputValue
-				}
-
 				this.chAdapter.sendMessage(this.conversation, data, (err, res) => {
 					if(err) return console.error(err);
 				});
@@ -614,6 +614,7 @@ class ConversationWindow {
 		fileData.type = fileData.attachmentType;
 
 		let data = {
+			id : uuid(),
 			type : "normal",
 			attachments : [fileData]
 		}
@@ -630,6 +631,50 @@ class ConversationWindow {
 				if(err) return console.error(err);
 			});
 		}
+	}
+
+	addPendingMessage(msgData) {
+		msgData["ownerId"] = this.widget.userId;
+		let messagesBox = document.getElementById("ch_messages_box");
+
+		// Remove no message tag
+		if(messagesBox.firstChild && messagesBox.firstChild.id == "ch_no_msg") {
+			messagesBox.firstChild.remove();
+		}
+
+		// Create message list
+		let msgListAttributes = [{"id":msgData.id},{"class":"ch-msg-list"}];
+		let msgList = this.utility.createElement("div", msgListAttributes, null, messagesBox);
+
+		// Create message container
+		let msgContainerAttributes = [{"class":"ch-msg-container"}];
+		let msgContainer = this.utility.createElement("div", msgContainerAttributes, null, msgList);
+		msgContainer.classList.add("right");
+
+		// Create message more options
+		let moreOptionAttributes = [{"class":"ch-msg-more-option"}];
+		let moreOption = this.utility.createElement("i", moreOptionAttributes, "more_vert", msgList);
+		moreOption.classList.add("material-icons", "left");
+		this._addListenerOnMoreOption(msgData, moreOption, msgList);
+
+		// Create message div
+		let msgDivAttributes = [{"id":"ch_message_"+msgData.id},{"class":"ch-message"}];
+		let msgDiv = this.utility.createElement("div", msgDivAttributes, msgData.body, msgContainer);
+
+		// Create message time span
+		let date = new Date();
+		date = date.toISOString();
+		let createdAt = this.utility.updateTimeFormat(date);
+		let msgTimeAttributes = [{"id":"ch_msg_time"},{"class":"ch-msg-time"}];
+		let msgTime = this.utility.createElement("span", msgTimeAttributes, createdAt, msgContainer);		
+		
+		// Create message read status
+		let statusAttributes = [{"id":"ch_msg_status"}];
+		let msgStatus = this.utility.createElement("i", statusAttributes, "schedule", msgContainer);
+		msgStatus.classList.add("material-icons", "ch-msg-status");
+
+		// Scroll to newly added dummy message
+		messagesBox.scrollTop = messagesBox.scrollHeight;
 	}
 
 	clearConversation() {
@@ -711,9 +756,20 @@ class ConversationWindow {
 	  	});
 	}
 
-	addNewMessage(message) {
+	addNewMessage(message, newConversation) {
+		// Set new conversation to replace dummy conversation
+		if(newConversation) {
+			this.conversation = newConversation;
+		}
+
 		message = this._modifyMessage(message);
 		this.messages.push(message);
+
+		// Remove pending dummy message
+		let dummyMessage = document.getElementById(message.id);
+		if(dummyMessage) {
+			dummyMessage.remove();
+		}
 
 		let messagesBox = document.getElementById("ch_messages_box");
 		if(message.type == "admin") {
@@ -733,8 +789,9 @@ class ConversationWindow {
 		message.createdAt = this.utility.updateTimeFormat(Date());
 
 		// Remove no message tag
-		if(messagesBox.firstChild && messagesBox.firstChild.id == "ch_no_msg")
+		if(messagesBox.firstChild && messagesBox.firstChild.id == "ch_no_msg") {
 			messagesBox.firstChild.remove();
+		}
 
 		// Create message list
 		let msgListAttributes = [{"id":message.id},{"class":"ch-msg-list"}];

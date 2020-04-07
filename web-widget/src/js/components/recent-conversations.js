@@ -221,7 +221,7 @@ class RecentConversations {
 				if(conversation.user.isOnline) {
 					conversation.status = LANGUAGE_PHRASES.ONLINE;
 				}
-				else {
+				else if(conversation.user.lastSeen) {
 					conversation.status = LANGUAGE_PHRASES.LAST_SEEN + this.utility.updateTimeFormat(member.user.lastSeen);
 				}
 			}
@@ -374,46 +374,27 @@ class RecentConversations {
 		}
 	}
 
-	updateNewMessage(message) {
+	updateNewMessage(message, newConversation = null) {
 		if(!message) {
 			return;
 		}
 
 		let convToUpdate = this.conversations.find(conv => conv.id == message.conversationId);
 
-		// Update recent conversation list if exist
-		if(convToUpdate && document.getElementById(convToUpdate.id)) {
+		if(newConversation) {
+			// Remove no message tag if exist
+			if(document.getElementById("ch_no_msg")) {
+				document.getElementById("ch_no_msg").remove();
+			}
+
+			newConversation = this.modifyConversation(newConversation);
+			this.conversations = this.conversations.concat(newConversation);
+			this._addNewConversationInList(newConversation);
+		}
+		else {
 			document.getElementById(convToUpdate.id).remove();
 			convToUpdate = this._setLastMessage(convToUpdate, message);
 			this._addNewConversationInList(convToUpdate);
-		}
-		else {
-			// Get new conversation object
-			this.chAdapter.getConversation(message.conversationId, (err, conversation) => {
-				if(err) return console.error(err);
-
-				// Remove no message tag if exist
-				if(document.getElementById("ch_no_msg"))
-					document.getElementById("ch_no_msg").remove();
-
-				conversation = this.modifyConversation(conversation);
-				this.conversations = this.conversations.concat(conversation);
-				this._addNewConversationInList(conversation);
-
-				// Replace dummy conversation with new conversation
-				this.widget.convWindows.forEach(conversationWindow => {
-					if(conversationWindow.conversation.isDummyObject) {
-						if(document.getElementById("ch_conv_window")) {
-							document.getElementById("ch_conv_window").remove();
-							this.widget.convWindows.pop();
-						}
-
-						const conversationWindow = new ConversationWindow(this.widget);
-						conversationWindow.init(conversation);
-						this.widget.convWindows.push(conversationWindow);
-					}
-				});
-			});
 		}
 	}
 
