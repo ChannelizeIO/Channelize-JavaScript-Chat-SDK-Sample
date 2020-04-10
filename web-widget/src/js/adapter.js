@@ -146,6 +146,14 @@ class ChannelizeAdapter {
 	    });
 	}
 
+	joinConversation(conversation, cb) {
+	    conversation.join(function (err, res) {
+	        if (err) return cb(err);
+
+	        return cb(null, res);
+	    });
+	}
+
 	muteConversation(conversation, cb) {
 		conversation.muteConversation(function (err, res) {
 			if (err) return cb(err);
@@ -216,6 +224,10 @@ class ChannelizeAdapter {
 
 	readByAllMembers(conversation, message) {
 	    return conversation.readByAllMembers(message);
+	}
+
+	getConversationConfig(conversation, key) {
+	    return conversation.getConfig(key);
 	}
 
 	getMessages(conversation, limit, skip, ids, types, attachmentTypes, ownerIds, cb) {

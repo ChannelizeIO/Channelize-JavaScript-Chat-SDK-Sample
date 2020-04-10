@@ -643,6 +643,22 @@ class RecentConversations {
 			onlineIcon.classList.remove("ch-user-blocked");
 		}
 	}
+
+	handleUserJoined(data) {
+		this.conversations.forEach(conversation => {
+			if(conversation.user.id == data.conversation.id) {
+				conversation.isActive = true;
+			}
+		});
+	}
+
+	handleUserRemoved(data) {
+		this.conversations.forEach(conversation => {
+			if(conversation.user.id == data.conversation.id) {
+				conversation.isActive = false;
+			}
+		});
+	}
 }
 
 export { RecentConversations as default };

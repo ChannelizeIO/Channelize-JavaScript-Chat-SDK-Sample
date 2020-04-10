@@ -91,11 +91,23 @@ class ConversationWindow {
 
 		// Create clear option
 		let clearOptionAttributes = [{"id":"ch_conv_clear"},{"class":"ch-conv-clear"}];
-		this.utility.createElement("div", clearOptionAttributes, LANGUAGE_PHRASES.CLEAR_CONV, dropDown);
+		let clearOption = this.utility.createElement("div", clearOptionAttributes, LANGUAGE_PHRASES.CLEAR_CONV, dropDown);
+		clearOption.style.display = 'block';
+		if(conversation.type != 'private') {
+			clearOption.style.display = 'none';
+		}
 
 		// Create delete option
 		let deleteOptionAttributes = [{"id":"ch_conv_delete"},{"class":"ch-conv-delete"}];
 		this.utility.createElement("div", deleteOptionAttributes, LANGUAGE_PHRASES.DELETE_CONV, dropDown);
+
+		// Create leave conversation option
+		let leaveOptionAttributes = [{"id":"ch_conv_leave"},{"class":"ch-conv-leave"}];
+		let leaveOption = this.utility.createElement("div", leaveOptionAttributes, LANGUAGE_PHRASES.LEAVE_CONV, dropDown);
+		leaveOption.style.display = "none";
+		if(conversation.isGroup && conversation.isActive) {
+			leaveOption.style.display = "block";
+		}
 
 		// Create block user option
 		let blockOptionAttributes = [{"id":"ch_conv_block"}];
@@ -226,9 +238,20 @@ class ConversationWindow {
 		sendIcon.classList.add("material-icons");
 
 		// Hide send message box and status is blocked user
-		if(conversation.blockedByUser || conversation.blockedByMember) {
+		if(conversation.blockedByUser || conversation.blockedByMember || !conversation.isActive) {
 			status.style.visibility = "hidden";
-			sendBox.style.visibility = "hidden";
+ 			sendBox.style.visibility = "hidden";
+		}
+
+		// Create join conversation button
+		let footerAttributes = [{"id":"ch_footer"},{"class":"ch-footer"}];
+		let footer = this.utility.createElement("div", footerAttributes, null, windowDiv);
+
+		let joinButtonAttributes = [{"id":"ch_conv_join"},{"class":"ch-conv-join"}];
+		let joinButton = this.utility.createElement("button", joinButtonAttributes, LANGUAGE_PHRASES.JOIN_CONV, footer);
+		joinButton.style.visibility = "hidden";
+		if(conversation.isGroup && conversation.type === 'public' && !conversation.isActive) {
+			joinButton.style.visibility = "visible";
 		}
 
 		if(loadMessages)
@@ -449,6 +472,23 @@ class ConversationWindow {
 			document.getElementById("ch_conv_drop_down").classList.toggle("ch-show-element");
 			this.deleteConversation();
 		});
+
+		// Conversation leave button listener
+		let leaveBtn = document.getElementById("ch_conv_leave");
+		if(leaveBtn) {
+			leaveBtn.addEventListener("click", (data) => {
+				document.getElementById("ch_conv_drop_down").classList.toggle("ch-show-element");
+				this.leaveConversation();
+			});
+		}
+
+		// Conversation leave button listener
+		let joinBtn = document.getElementById("ch_conv_join");
+		if(joinBtn) {
+			joinBtn.addEventListener("click", (data) => {
+				this.joinConversation();
+			});
+		}
 
 		// Member block  button listener
 		let blockBtn = document.getElementById("ch_conv_block");
@@ -689,6 +729,18 @@ class ConversationWindow {
 		});
 	}
 
+	leaveConversation() {
+		this.chAdapter.leaveConversation(this.conversation, (err, res) => {
+			if(err) return console.error(err);
+		});
+	}
+
+	joinConversation() {
+		this.chAdapter.joinConversation(this.conversation, (err, res) => {
+			if(err) return console.error(err);
+		});
+	}
+
 	_getMessages(conversation, limit, skip, ids, types, attachmentTypes, ownerIds, cb) {
 		this.chAdapter.getMessages(conversation, limit, skip,  ids, types, attachmentTypes, ownerIds, (err, messages) => {
 			if(err) return cb(err);
@@ -735,7 +787,7 @@ class ConversationWindow {
 		}
 
 		// Set read status of message
-		if(!this.conversation.isDummyObject) {
+		if(!this.conversation.isDummyObject && this.chAdapter.getConversationConfig(this.conversation, 'read_events')) {
 			message.readByAll = this.chAdapter.readByAllMembers(this.conversation, message);
 		}
 
@@ -749,6 +801,7 @@ class ConversationWindow {
 	}
 
 	_markAsRead(conversation) {
+		if(!this.chAdapter.getConversationConfig(conversation, 'read_events')) return;
 		let currentDate = new Date();
 		let timestamp = currentDate.toISOString();
 	  	this.chAdapter.markAsReadConversation(conversation, timestamp, (err, res) => {
@@ -973,18 +1026,20 @@ class ConversationWindow {
 				msgOptionsContainer.style.right = "15px";
 
 			// Create delete message for me option
-			let deleteMsgAttributes = [{"class":"ch-msg-delete-for-me"}];
-			let deleteMsgOption = this.utility.createElement("div", deleteMsgAttributes, LANGUAGE_PHRASES.DELETE_FOR_ME, msgOptionsContainer);
+			if(this.conversation.type === 'private') {
+				let deleteMsgAttributes = [{"class":"ch-msg-delete-for-me"}];
+				let deleteMsgOption = this.utility.createElement("div", deleteMsgAttributes, LANGUAGE_PHRASES.DELETE_FOR_ME, msgOptionsContainer);
 
-			// Add listener on delete message for me
-			deleteMsgOption.addEventListener("click", (data) => {
-				msgOptionsContainer.remove();
+				// Add listener on delete message for me
+				deleteMsgOption.addEventListener("click", (data) => {
+					msgOptionsContainer.remove();
 
-				// Delete message for me
-				this.chAdapter.deleteMessagesForMe([message.id], (err, res) => {
-					if(err) console.error(err);
-				})
-			});
+					// Delete message for me
+					this.chAdapter.deleteMessagesForMe([message.id], (err, res) => {
+						if(err) console.error(err);
+					})
+				});
+			}
 
 			if(!message.isDeleted && message.ownerId == this.widget.userId) {
 				// Create delete message for everyone option
@@ -1059,6 +1114,28 @@ class ConversationWindow {
 
   		document.getElementById("ch_messages_box").innerHTML = "";
   	}
+
+	handleUserJoined(data) {
+  		if(data.conversation.id != this.conversation.id) return;
+		this.conversation.isActive = true;
+		document.getElementById("ch_send_box").style.visibility = "visible";
+		document.getElementById("ch_conv_leave").style.display = "block";
+		if(this.conversation.type === 'public') {
+			document.getElementById("ch_conv_join").style.visibility = "hidden";
+		}
+	}
+
+	handleUserRemoved(data) {
+  		if(data.conversation.id != this.conversation.id) return;
+		this.conversation.isActive = false;
+		document.getElementById("ch_send_box").style.visibility = "hidden";
+		document.getElementById("ch_conv_leave").style.display = "none";
+		if(this.conversation.type === 'public') {
+			document.getElementById("ch_conv_join").style.visibility = "visible";
+		}
+	}
+
+
 }
 
 export { ConversationWindow as default };

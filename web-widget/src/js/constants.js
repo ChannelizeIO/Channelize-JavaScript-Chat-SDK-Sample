@@ -10,6 +10,8 @@ export const LANGUAGE_PHRASES = {
 	MUTE_CONV : "Mute Conversation",
 	CLEAR_CONV : "Clear Conversation",
 	DELETE_CONV : "Delete Conversation",
+	LEAVE_CONV : "Leave Conversation",
+	JOIN_CONV : "Join Conversation",
 	BLOCK_USER : "Block User",
 	UNBLOCK_USER : "Unblock User",
 	SEND_MESSAGE : "Send a message",

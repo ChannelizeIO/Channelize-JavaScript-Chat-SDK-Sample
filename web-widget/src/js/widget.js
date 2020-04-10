@@ -264,6 +264,32 @@ class ChannelizeWidget {
 				conversationWindow.handleUnblock(data);
 			});
 		});
+
+		// Handle user join
+		window.channelize.chsocket.on('user.joined', (data) => {
+			// Update conversation active in recent conversation
+			if(this.recentConversations) {
+				this.recentConversations.handleUserJoined(data);
+			}
+
+			// Update conversation active in conversation windows
+			this.convWindows.forEach(conversationWindow => {
+				conversationWindow.handleUserJoined(data);
+			});
+		});
+
+		// Handle user left
+		window.channelize.chsocket.on('user.removed', (data) => {
+			// Update conversation active in recent conversation
+			if(this.recentConversations) {
+				this.recentConversations.handleUserRemoved(data);
+			}
+
+			// Update conversation active in conversation windows
+			this.convWindows.forEach(conversationWindow => {
+				conversationWindow.handleUserRemoved(data);
+			});
+		});
 	}
 
 	setCookie(userId, accessToken, exdays) {

@@ -838,6 +838,16 @@ ul {
       visibility: visible;
     }
   }
+  .ch-footer {
+    .ch-conv-join {
+      position: absolute;
+      bottom: 0;
+      background: $theme-color;
+      color: $white-color;
+      width: 100%;
+      padding: 8px;
+    }
+  }
 }
 /*conversation style end here*/
 
