@@ -1,5 +1,5 @@
 import Utility from "../utility.js";
-import RecentConversations from "./recent-conversations.js";
+import { v4 as uuid } from 'uuid';
 import { LANGUAGE_PHRASES, IMAGES, SETTINGS } from "../constants.js";
 
 class ConversationWindow {
@@ -13,6 +13,7 @@ class ConversationWindow {
 		this.loadCount = 0;
 		this.limit = 25;
 		this.skip = 0;
+		this.messages = [];
 	}
 
 	init(conversation = null, data = null) {
@@ -67,7 +68,13 @@ class ConversationWindow {
 
 		// Create conversation header title
 		let titleAttributes = [{"class":"ch-conv-title"}];
-		this.utility.createElement("div", titleAttributes, conversation.title, detailsWrapper);
+		let headerTitle = this.utility.createElement("div", titleAttributes, conversation.title, detailsWrapper);
+
+		if(this.conversation.isGroup) {
+			headerTitle.addEventListener("click", (data) => {
+				this.widget.loadConversationMembers(this.conversation.id);
+			});
+		}
 
 		// Create option button
 		let optionAttributes = [{"id":"ch_conv_options"}];
@@ -84,11 +91,23 @@ class ConversationWindow {
 
 		// Create clear option
 		let clearOptionAttributes = [{"id":"ch_conv_clear"},{"class":"ch-conv-clear"}];
-		this.utility.createElement("div", clearOptionAttributes, LANGUAGE_PHRASES.CLEAR_CONV, dropDown);
+		let clearOption = this.utility.createElement("div", clearOptionAttributes, LANGUAGE_PHRASES.CLEAR_CONV, dropDown);
+		clearOption.style.display = 'block';
+		if(conversation.type != 'private') {
+			clearOption.style.display = 'none';
+		}
 
 		// Create delete option
 		let deleteOptionAttributes = [{"id":"ch_conv_delete"},{"class":"ch-conv-delete"}];
 		this.utility.createElement("div", deleteOptionAttributes, LANGUAGE_PHRASES.DELETE_CONV, dropDown);
+
+		// Create leave conversation option
+		let leaveOptionAttributes = [{"id":"ch_conv_leave"},{"class":"ch-conv-leave"}];
+		let leaveOption = this.utility.createElement("div", leaveOptionAttributes, LANGUAGE_PHRASES.LEAVE_CONV, dropDown);
+		leaveOption.style.display = "none";
+		if(conversation.isGroup && conversation.isActive) {
+			leaveOption.style.display = "block";
+		}
 
 		// Create block user option
 		let blockOptionAttributes = [{"id":"ch_conv_block"}];
@@ -219,9 +238,20 @@ class ConversationWindow {
 		sendIcon.classList.add("material-icons");
 
 		// Hide send message box and status is blocked user
-		if(conversation.blockedByUser || conversation.blockedByMember) {
+		if(conversation.blockedByUser || conversation.blockedByMember || !conversation.isActive) {
 			status.style.visibility = "hidden";
-			sendBox.style.visibility = "hidden";
+ 			sendBox.style.visibility = "hidden";
+		}
+
+		// Create join conversation button
+		let footerAttributes = [{"id":"ch_footer"},{"class":"ch-footer"}];
+		let footer = this.utility.createElement("div", footerAttributes, null, windowDiv);
+
+		let joinButtonAttributes = [{"id":"ch_conv_join"},{"class":"ch-conv-join"}];
+		let joinButton = this.utility.createElement("button", joinButtonAttributes, LANGUAGE_PHRASES.JOIN_CONV, footer);
+		joinButton.style.visibility = "hidden";
+		if(conversation.isGroup && conversation.type === 'public' && !conversation.isActive) {
+			joinButton.style.visibility = "visible";
 		}
 
 		if(loadMessages)
@@ -230,7 +260,7 @@ class ConversationWindow {
 
 	_createMessagesListing(conversation) {
 		// Get conversation messages
-		this._getMessages(conversation, this.limit, this.skip, (err, messages) => {
+		this._getMessages(conversation, this.limit, this.skip, null, null, null, null, (err, messages) => {
 			if(err) return console.error(err);
 
 			this.messages = messages;
@@ -249,12 +279,10 @@ class ConversationWindow {
 			this.messages.forEach(message => {
 				// Update message object
 				message = this._modifyMessage(message);
-				this.previousUserId = message.ownerId;
 
-				// Handle meta message
-				if(message.contentType == 1) {
-					// let metaMessageAttributes = [{"class":"ch-meta-msg"}];
-					// this.utility.createElement("div", metaMessageAttributes, "Meta Message", messagesBox);
+				if(message.type == "admin") {
+					let metaMessageAttributes = [{"class":"ch-admin-msg"}];
+					this.utility.createElement("div", metaMessageAttributes, message.body, messagesBox);
 					return;
 				}
 
@@ -283,7 +311,7 @@ class ConversationWindow {
 				let msgDiv = this.utility.createElement("div", msgDivAttributes, message.body, msgContainer);
 
 				// Create media message frame
-				this._createMediaMessageFrame(message);
+				this._createMediaMessageFrame(message, msgDiv);
 
 				// Create message time span
 				let msgTimeAttributes = [{"id":"ch_msg_time"},{"class":"ch-msg-time"}];
@@ -294,7 +322,7 @@ class ConversationWindow {
 					moreOption.classList.add("left");
 					// Create message read status
 					let statusAttributes = [{"id":"ch_msg_status"}];
-					let readIcon = message.readStatus == 3 ? "done_all" : "check";
+					let readIcon = message.readByAll ? "done_all" : "check";
 					let msgStatus = this.utility.createElement("i", statusAttributes, readIcon, msgContainer);
 					msgStatus.classList.add("material-icons", "ch-msg-status");
 				}
@@ -308,20 +336,38 @@ class ConversationWindow {
 	}
 
 	modifyConversation(conversation) {
-		if(!conversation.isGroup) {
-			// Set conversation title and image
-			let member = conversation.membersList.find(member => member.userId != this.widget.userId);
-			conversation.title = member.user.displayName;
-			conversation.profileImageUrl = member.user.profileImageUrl ? member.user.profileImageUrl : IMAGES.AVTAR;
+		if(!conversation || conversation.isModified)
+			return conversation;
 
-			if(member.user.isOnline)
-				conversation.status = LANGUAGE_PHRASES.ONLINE;
-			else if(!member.user.isOnline && member.user.lastSeen)
-				conversation.status = LANGUAGE_PHRASES.LAST_SEEN + this.utility.updateTimeFormat(member.user.lastSeen);
+		if (!conversation.isGroup && conversation.user && Object.entries(conversation.user).length === 0) {
+			conversation.title = LANGUAGE_PHRASES.DELETED_MEMBER;
+			conversation.profileImageUrl = IMAGES.AVTAR;
+			return conversation;
+    	}
+
+	    // Set profile Image, title and status of conversation
+		if(conversation.isGroup) {
+			conversation.profileImageUrl = conversation.profileImageUrl ? conversation.profileImageUrl : IMAGES.GROUP;
+			conversation.status = conversation.memberCount + " " + LANGUAGE_PHRASES.MEMBERS;
 		}
 		else {
-			conversation.status = conversation.memberCount + " " + LANGUAGE_PHRASES.MEMBERS;
+			conversation.profileImageUrl = conversation.user.profileImageUrl ? conversation.user.profileImageUrl : IMAGES.AVTAR;
+			conversation.title = conversation.user.displayName;
 
+			// Set block user status
+			let member = conversation.members.find(member => member.userId == conversation.user.id);
+			conversation.blockedByMember = member ? false : true;
+
+			if(!conversation.isActive) {
+				conversation.blockedByUser = true;
+			}
+
+			if(conversation.user.isOnline) {
+				conversation.status = LANGUAGE_PHRASES.ONLINE;
+			}
+			else {
+				conversation.status = LANGUAGE_PHRASES.LAST_SEEN + this.utility.updateTimeFormat(member.user.lastSeen);
+			}
 		}
 		return conversation;
 	}
@@ -329,13 +375,12 @@ class ConversationWindow {
 	_loadMoreMessages() {
 		++this.loadCount;
 		this.skip = this.loadCount * this.limit;
-		this._getMessages(this.conversation, this.limit, this.skip, (err, messages) => {
+		this._getMessages(this.conversation, this.limit, this.skip, null, null, null, null, (err, messages) => {
 			if(err) return console.error(err);
 
-			if(!messages && messages[0].chatId != this.conversation.id)
+			if(!messages && messages[0].conversationId != this.conversation.id)
 				return;
 
-			messages.reverse();
 			this.messages = this.messages.concat(messages);
 
 			// Save first message to scroll
@@ -344,12 +389,14 @@ class ConversationWindow {
 
 			messages.forEach(message => {
 
-				// Remove meta message
-				if(message.contentType == 1)
-					return;
-
 				// Update message object
 				message = this._modifyMessage(message);
+
+				if(message.type == "admin") {
+					let metaMessageAttributes = [{"class":"ch-admin-msg"}];
+					this.utility.createElement("div", metaMessageAttributes, message.body, messagesBox);
+					return;
+				}
 
 				// Create message list
 				let msgListAttributes = [{"id":message.id},{"class":"ch-msg-list"}];
@@ -370,7 +417,7 @@ class ConversationWindow {
 				let msgDiv = this.utility.createElement("div", msgDivAttributes, message.body, msgContainer);
 
 				// Create media message frame
-				this._createMediaMessageFrame(message);
+				this._createMediaMessageFrame(message, msgDiv);
 
 				// Create message time span
 				let msgTimeAttributes = [{"id":"ch_msg_time"},{"class":"ch-msg-time"}];
@@ -381,7 +428,7 @@ class ConversationWindow {
 					moreOption.classList.add("left");
 					// Create message read status
 					let statusAttributes = [{"id":"ch_msg_status"}];
-					let readIcon = message.readStatus == 3 ? "done_all" : "check";
+					let readIcon = message.readByAll ? "done_all" : "check";
 					let msgStatus = this.utility.createElement("i", statusAttributes, readIcon, msgContainer);
 					msgStatus.classList.add("material-icons", "ch-msg-status");
 				}
@@ -426,12 +473,29 @@ class ConversationWindow {
 			this.deleteConversation();
 		});
 
+		// Conversation leave button listener
+		let leaveBtn = document.getElementById("ch_conv_leave");
+		if(leaveBtn) {
+			leaveBtn.addEventListener("click", (data) => {
+				document.getElementById("ch_conv_drop_down").classList.toggle("ch-show-element");
+				this.leaveConversation();
+			});
+		}
+
+		// Conversation leave button listener
+		let joinBtn = document.getElementById("ch_conv_join");
+		if(joinBtn) {
+			joinBtn.addEventListener("click", (data) => {
+				this.joinConversation();
+			});
+		}
+
 		// Member block  button listener
 		let blockBtn = document.getElementById("ch_conv_block");
 		if(blockBtn) {
 			blockBtn.addEventListener("click", (data) => {
 				document.getElementById("ch_conv_drop_down").classList.toggle("ch-show-element");
-				this.chAdapter.blockMember(this.conversation.member.userId, (err, res) => {
+				this.chAdapter.blockMember(this.conversation.user.id, (err, res) => {
 					if(err) return console.error(err);
 				});
 			});
@@ -442,7 +506,7 @@ class ConversationWindow {
 		if(unblockBtn) {
 			unblockBtn.addEventListener("click", (data) => {
 				document.getElementById("ch_conv_drop_down").classList.toggle("ch-show-element");
-				this.chAdapter.unblockMember(this.conversation.member.userId, (err, res) => {
+				this.chAdapter.unblockMember(this.conversation.user.id, (err, res) => {
 					if(err) return console.error(err);
 				});
 			});
@@ -513,6 +577,18 @@ class ConversationWindow {
 	sendMessage(msgType) {
 		// Hide file picker
 		document.getElementById("ch_media_docker").classList.remove("ch-show-docker");
+		let messagesBox = document.getElementById("ch_messages_box");
+
+		// Show loader image if media message
+		if(msgType != "text") {
+			if(document.getElementById("ch_no_msg"))
+				document.getElementById("ch_no_msg").remove();
+
+			let msgLoaderAttributes = [{"id":"ch_msg_loader"},{"class":"ch-msg-loader"}];
+			let imageMsg = this.utility.createElement("div", msgLoaderAttributes, null, messagesBox);
+			imageMsg.style.backgroundImage = "url(" + IMAGES.MESSAGE_LOADER + ")";
+			imageMsg.scrollIntoView();
+		}
 
 		if(msgType == "text") {
 			let inputValue = document.getElementById("ch_input_box").value;
@@ -521,13 +597,24 @@ class ConversationWindow {
 			if(!inputValue.trim())
 				return;
 
+			let data = {
+				id : uuid(),
+				type : "normal",
+				body : inputValue
+			}
+
+			// Add pending message into list
+			this.addPendingMessage(data);
+
 			if(this.conversation.isDummyObject) {
-				this.chAdapter.sendTextMessageToUser(this.conversation.userId, inputValue, (err, res) => {
+				data['userId'] = this.conversation.userId;
+
+				this.chAdapter.sendMessageToUser(data, (err, res) => {
 					if(err) return console.error(err);
 				});
 			}
 			else {
-				this.chAdapter.sendTextMessage(this.conversation, inputValue, [], (err, res) => {
+				this.chAdapter.sendMessage(this.conversation, data, (err, res) => {
 					if(err) return console.error(err);
 				});
 			}
@@ -535,24 +622,99 @@ class ConversationWindow {
 		else if(msgType == "image") {
 			let file = document.getElementById("ch_image_input").files[0];
 
-			this.chAdapter.sendFileMessage(this.conversation, file, true, (err, message) => {
+			// Upload file on channelize server
+			this.chAdapter.uploadFile(file, true, (err, fileData) => {
 				if(err) return console.error(err);
+
+				this._sendFileMessage(fileData);
 			});
 		}
 		else if(msgType == "audio") {
 			let file = document.getElementById("ch_audio_input").files[0];
 
-			this.chAdapter.sendFileMessage(this.conversation, file, true, (err, message) => {
+			// Upload file on channelize server
+			this.chAdapter.uploadFile(file, true, (err, fileData) => {
 				if(err) return console.error(err);
+
+				this._sendFileMessage(fileData);
 			});
 		}
 		else if(msgType == "video") {
 			let file = document.getElementById("ch_video_input").files[0];
+			// Upload file on channelize server
+			this.chAdapter.uploadFile(file, true, (err, fileData) => {
+				if(err) return console.error(err);
 
-			this.chAdapter.sendFileMessage(this.conversation, file, true, (err, message) => {
+				this._sendFileMessage(fileData);
+			});
+		}
+	}
+
+	_sendFileMessage(fileData) {
+		fileData.type = fileData.attachmentType;
+
+		let data = {
+			id : uuid(),
+			type : "normal",
+			attachments : [fileData]
+		}
+
+		// Send file message as attachment
+		if(this.conversation.isDummyObject) {
+			data['userId'] = this.conversation.userId;
+			this.chAdapter.sendMessageToUser(data, (err, message) => {
 				if(err) return console.error(err);
 			});
 		}
+		else {
+			this.chAdapter.sendMessage(this.conversation, data, (err, message) => {
+				if(err) return console.error(err);
+			});
+		}
+	}
+
+	addPendingMessage(msgData) {
+		msgData["ownerId"] = this.widget.userId;
+		let messagesBox = document.getElementById("ch_messages_box");
+
+		// Remove no message tag
+		if(messagesBox.firstChild && messagesBox.firstChild.id == "ch_no_msg") {
+			messagesBox.firstChild.remove();
+		}
+
+		// Create message list
+		let msgListAttributes = [{"id":msgData.id},{"class":"ch-msg-list"}];
+		let msgList = this.utility.createElement("div", msgListAttributes, null, messagesBox);
+
+		// Create message container
+		let msgContainerAttributes = [{"class":"ch-msg-container"}];
+		let msgContainer = this.utility.createElement("div", msgContainerAttributes, null, msgList);
+		msgContainer.classList.add("right");
+
+		// Create message more options
+		let moreOptionAttributes = [{"class":"ch-msg-more-option"}];
+		let moreOption = this.utility.createElement("i", moreOptionAttributes, "more_vert", msgList);
+		moreOption.classList.add("material-icons", "left");
+		this._addListenerOnMoreOption(msgData, moreOption, msgList);
+
+		// Create message div
+		let msgDivAttributes = [{"id":"ch_message_"+msgData.id},{"class":"ch-message"}];
+		let msgDiv = this.utility.createElement("div", msgDivAttributes, msgData.body, msgContainer);
+
+		// Create message time span
+		let date = new Date();
+		date = date.toISOString();
+		let createdAt = this.utility.updateTimeFormat(date);
+		let msgTimeAttributes = [{"id":"ch_msg_time"},{"class":"ch-msg-time"}];
+		let msgTime = this.utility.createElement("span", msgTimeAttributes, createdAt, msgContainer);		
+		
+		// Create message read status
+		let statusAttributes = [{"id":"ch_msg_status"}];
+		let msgStatus = this.utility.createElement("i", statusAttributes, "schedule", msgContainer);
+		msgStatus.classList.add("material-icons", "ch-msg-status");
+
+		// Scroll to newly added dummy message
+		messagesBox.scrollTop = messagesBox.scrollHeight;
 	}
 
 	clearConversation() {
@@ -567,8 +729,20 @@ class ConversationWindow {
 		});
 	}
 
-	_getMessages(conversation, limit, skip, cb) {
-		this.chAdapter.getMessages(conversation, limit, skip, (err, messages) => {
+	leaveConversation() {
+		this.chAdapter.leaveConversation(this.conversation, (err, res) => {
+			if(err) return console.error(err);
+		});
+	}
+
+	joinConversation() {
+		this.chAdapter.joinConversation(this.conversation, (err, res) => {
+			if(err) return console.error(err);
+		});
+	}
+
+	_getMessages(conversation, limit, skip, ids, types, attachmentTypes, ownerIds, cb) {
+		this.chAdapter.getMessages(conversation, limit, skip,  ids, types, attachmentTypes, ownerIds, (err, messages) => {
 			if(err) return cb(err);
 
 			messages.reverse();
@@ -578,34 +752,99 @@ class ConversationWindow {
 
 	_modifyMessage(message) {
 		if(!message)
-			return;
+			return message;
 
-		let member = message.recipients.find(member => member.recipientId == this.widget.userId);
-	    message.createdAt = this.utility.updateTimeFormat(member.createdAt);
-	    message.readStatus = member.status;
+		// Handle meta message
+		if(message.type == "admin") {
 
-	    if(message.isDeleted)
+			// adminMessageType
+			switch(message.body) {
+				case "admin_group_create" :
+					message.body = LANGUAGE_PHRASES.GROUP_CREATED;
+					break;
+
+				case "admin_group_change_photo" :
+					message.body = LANGUAGE_PHRASES.GROUP_PHOTO_CHANGED;
+					break;
+
+				case "admin_group_change_title" :
+					message.body = LANGUAGE_PHRASES.GROUP_TITLE_CHANGED;
+					break;
+
+				case "admin_group_add_members" :
+					message.body = LANGUAGE_PHRASES.GROUP_MEMBER_ADDED;
+					break;
+
+				case "admin_group_remove_members" :
+					message.body = LANGUAGE_PHRASES.GROUP_MEMBER_REMOVED;
+					break;
+
+				case "admin_group_make_admin" :
+					message.body = LANGUAGE_PHRASES.GROUP_ADMIN_UPDATED;
+					break;
+			}
+			return message;
+		}
+
+		// Set read status of message
+		if(!this.conversation.isDummyObject && this.chAdapter.getConversationConfig(this.conversation, 'read_events')) {
+			message.readByAll = this.chAdapter.readByAllMembers(this.conversation, message);
+		}
+
+	    message.createdAt = this.utility.updateTimeFormat(message.createdAt);
+
+	    if(message.isDeleted) {
 	    	message.body = "<i>" + LANGUAGE_PHRASES.MESSAGE_DELETED;
+	    }
 
 	    return message;
 	}
 
 	_markAsRead(conversation) {
-	  	this.chAdapter.markAsReadConversation(conversation, (err, res) => {
+		if(!this.chAdapter.getConversationConfig(conversation, 'read_events')) return;
+		let currentDate = new Date();
+		let timestamp = currentDate.toISOString();
+	  	this.chAdapter.markAsReadConversation(conversation, timestamp, (err, res) => {
 	  		if(err) return console.error(err);
 	  	});
-	  }
+	}
 
-	addNewMessage(message) {
-  		let messagesBox = document.getElementById("ch_messages_box");
-		if(message.chatId != this.conversation.id || !messagesBox)
+	addNewMessage(message, newConversation) {
+		// Set new conversation to replace dummy conversation
+		if(newConversation) {
+			this.conversation = newConversation;
+		}
+
+		message = this._modifyMessage(message);
+		this.messages.push(message);
+
+		// Remove pending dummy message
+		let dummyMessage = document.getElementById(message.id);
+		if(dummyMessage) {
+			dummyMessage.remove();
+		}
+
+		let messagesBox = document.getElementById("ch_messages_box");
+		if(message.type == "admin") {
+			let metaMessageAttributes = [{"class":"ch-admin-msg"}];
+			this.utility.createElement("div", metaMessageAttributes, message.body, messagesBox);
+			return;
+		}
+
+		// Hide message loader
+		if(document.getElementById("ch_msg_loader") && message.ownerId == this.widget.userId) {
+			document.getElementById("ch_msg_loader").remove();
+		}
+
+		if(message.conversationId != this.conversation.id || !messagesBox)
 			return;
 
 		message.createdAt = this.utility.updateTimeFormat(Date());
 
 		// Remove no message tag
-		if(messagesBox.firstChild && messagesBox.firstChild.id == "ch_no_msg")
+		if(messagesBox.firstChild && messagesBox.firstChild.id == "ch_no_msg") {
 			messagesBox.firstChild.remove();
+		}
 
 		// Create message list
 		let msgListAttributes = [{"id":message.id},{"class":"ch-msg-list"}];
@@ -626,7 +865,7 @@ class ConversationWindow {
 		let msgDiv = this.utility.createElement("div", msgDivAttributes, message.body, msgContainer);
 
 		// Create media message frame
-		this._createMediaMessageFrame(message);
+		this._createMediaMessageFrame(message, msgDiv);
 
 		// Create message time span
 		let msgTimeAttributes = [{"id":"ch_msg_time"},{"class":"ch-msg-time"}];
@@ -638,7 +877,7 @@ class ConversationWindow {
 			moreOption.classList.add("left");
 			// Create message read status
 			let statusAttributes = [{"id":"ch_msg_status"}];
-			let readIcon = message.readStatus == 3 ? "done_all" : "check";
+			let readIcon = message.readByAll ? "done_all" : "check";
 			let msgStatus = this.utility.createElement("i", statusAttributes, readIcon, msgContainer);
 			msgStatus.classList.add("material-icons", "ch-msg-status");
 		}
@@ -655,8 +894,45 @@ class ConversationWindow {
 			messagesBox.scrollTop = messagesBox.scrollHeight;
 	}
 
-	updateStatus(user) {
-		if(this.conversation.isGroup || (this.conversation.member && this.conversation.member.userId != user.id))
+	updateMsgStatus(data) {
+		if(data.conversation.id != this.conversation.id)
+			return;
+
+		if(!this.conversation.isGroup) {
+			if(this.messages[this.messages.length-2].readByAll) {
+				let lastMessage = this.messages[this.messages.length-1];
+				lastMessage.readByAll = true;
+
+				// Update read tag icon
+				let msgDiv = document.getElementById(lastMessage.id);
+				if(msgDiv) {
+					let statusDiv = msgDiv.querySelector("#ch_msg_status");
+
+					if(statusDiv) {
+						statusDiv.innerHTML = "done_all";
+					}
+				}
+			}
+			else {
+				this.messages.forEach(msg => {
+					msg.readByAll = true;
+
+					// Update read tag icon
+					let msgDiv = document.getElementById(msg.id);
+					if(msgDiv) {
+						let statusDiv = msgDiv.querySelector("#ch_msg_status");
+
+						if(statusDiv) {
+							statusDiv.innerHTML = "done_all";
+						}
+					}
+				});
+			}
+		}
+	}
+
+	updateUserStatus(user) {
+		if(this.conversation.isGroup || !this.conversation.user || (this.conversation.user.id != user.id))
 			return;
 
 		if(user.isOnline) {
@@ -668,64 +944,69 @@ class ConversationWindow {
 		document.getElementById("ch_conv_status").innerText = this.conversation.status;
 	}
 
-	_createMediaMessageFrame(message) {
-	  	let messageBox = document.getElementById("ch_message_"+message.id);
+	_createMediaMessageFrame(message, parentDiv) {
 
 	  	// Create message div
-	  	if(!message.contentType && message.attachmentType != "text") {
-	  		let attachmentData = Object.keys(message.attachment).length != 0 ? message.attachment : message.fileData;
+	  	if(!message.body && Object.keys(message.attachments).length != 0) {
+	  		message.attachments.forEach(attachment => {
 
-	  		if(message.attachmentType == "audio") {
-	  			let audioMsgAttributes = [{"id":"ch_audio_message"},{"class":"ch-audio-message"},{"src":attachmentData.fileUrl}];
-				let audioTag = this.utility.createElement("audio", audioMsgAttributes, null, messageBox);
-				audioTag.setAttribute("controls",true);
-	  		}
-	  		else if(message.attachmentType == "video") {
-	  			let videoMsgAttributes = [{"id":"ch_video_message"},{"class":"ch-video-message"}];
-				let videoMessage = this.utility.createElement("div", videoMsgAttributes, null, messageBox);
-				videoMessage.style.backgroundImage = "url(" + attachmentData.thumbnailUrl + ")";
+		  		if(attachment.type == "audio") {
+		  			let audioMsgAttributes = [{"id":"ch_audio_message"},{"class":"ch-audio-message"},{"src":attachment.fileUrl}];
+					let audioTag = this.utility.createElement("audio", audioMsgAttributes, null, parentDiv);
+					audioTag.setAttribute("controls",true);
+		  		}
+		  		else if(attachment.type == "video") {
+		  			let videoMsgAttributes = [{"id":"ch_video_message"},{"class":"ch-video-message"}];
+					let videoMessage = this.utility.createElement("div", videoMsgAttributes, null, parentDiv);
+					videoMessage.style.backgroundImage = "url(" + attachment.thumbnailUrl + ")";
 
-				// Create play icon
-				let playIconAttributes = [{"id":"ch_play_icon"}];
-				let playIcon = this.utility.createElement("i", playIconAttributes, "play_circle_outline", videoMessage);
-				playIcon.classList.add("material-icons", "ch-play-icon");
+					// Create play icon
+					let playIconAttributes = [{"id":"ch_play_icon"}];
+					let playIcon = this.utility.createElement("i", playIconAttributes, "play_circle_outline", videoMessage);
+					playIcon.classList.add("material-icons", "ch-play-icon");
 
-				// Set video message listener
-				videoMessage.addEventListener("click", data => {
-					window.open(attachmentData.fileUrl, "_blank");
-				});
-	  		}
-	  		else {
-	  			let imageMsgAttributes = [{"id":"ch_image_message"},{"class":"ch-image-message"}];
-				let imageMsg = this.utility.createElement("div", imageMsgAttributes, null, messageBox);
-				imageMsg.style.backgroundImage = "url(" + attachmentData.thumbnailUrl + ")";
+					// Set video message listener
+					videoMessage.addEventListener("click", data => {
+						window.open(attachment.fileUrl, "_blank");
+					});
+		  		}
+		  		else if(attachment.type == "sticker") {
+		  			let stickerMsgAttributes = [{"id":"ch_sticker_message"},{"class":"ch-sticker-message"}];
+					let stickerMsg = this.utility.createElement("div", stickerMsgAttributes, null, parentDiv);
+					stickerMsg.style.backgroundImage = "url(" + attachment.originalUrl + ")";
+		  		}
+		  		else if(attachment.type == "gif") {
+		  			let stickerMsgAttributes = [{"id":"ch_gif_message"},{"class":"ch-sticker-message"}];
+					let stickerMsg = this.utility.createElement("div", stickerMsgAttributes, null, parentDiv);
+					stickerMsg.style.backgroundImage = "url(" + attachment.originalUrl + ")";
+		  		}
+		  		else if(attachment.type == "location") {
+		  			let locationSrc = SETTINGS.LOCATION_IMG_URL + "?center=" +
+			  		attachment.latitude + "," + attachment.longitude + "&zoom=15&size=208x100&maptype=roadmap&markers=color:red%7C" +
+			  		attachment.latitude + "," + attachment.longitude + "&key=" + SETTINGS.LOCATION_API_KEY;
 
-				// Set image message listener
-				imageMsg.addEventListener("click", data => {
-					window.open(attachmentData.fileUrl, "_blank");
-				});
-	  		}
+			  		let locationMsgAttributes = [{"id":"ch_location_message"},{"class":"ch-location-message"}];
+					let locationMsg = this.utility.createElement("div", locationMsgAttributes, null, parentDiv);
+					locationMsg.style.backgroundImage = "url(" + locationSrc + ")";
+
+					// Set location message listener
+					locationMsg.addEventListener("click", data => {
+						let mapUrl = "https://www.google.com/maps?z=15&t=m&q=loc:"+attachment.latitude+","+attachment.longitude;
+						window.open(mapUrl, "_blank");
+					});
+		  		}
+		  		else {
+		  			let imageMsgAttributes = [{"id":"ch_image_message"},{"class":"ch-image-message"}];
+					let imageMsg = this.utility.createElement("div", imageMsgAttributes, null, parentDiv);
+					imageMsg.style.backgroundImage = "url(" + attachment.thumbnailUrl + ")";
+
+					// Set image message listener
+					imageMsg.addEventListener("click", data => {
+						window.open(attachment.fileUrl, "_blank");
+					});
+		  		}
+		  	});
 	  	}
-	  	else if(message.contentType == 2) {
-	  		let stickerMsgAttributes = [{"id":"ch_sticker_message"},{"class":"ch-sticker-message"}];
-			let stickerMsg = this.utility.createElement("div", stickerMsgAttributes, null, messageBox);
-			stickerMsg.style.backgroundImage = "url(" + message.originalUrl + ")";
-	  	}
-	  	else if(message.contentType == 3) {
-	  		let locationSrc = SETTINGS.LOCATION_IMG_URL + "?center=" +
-	  		message.data.latitude + "," + message.data.longitude + "&zoom=15&size=208x100&maptype=roadmap&markers=color:red%7C" +
-	  		message.data.latitude + "," + message.data.longitude + "&key=" + SETTINGS.LOCATION_API_KEY;
-
-	  		let locationMsgAttributes = [{"id":"ch_location_message"},{"class":"ch-location-message"}];
-			let locationMsg = this.utility.createElement("div", locationMsgAttributes, null, messageBox);
-			locationMsg.style.backgroundImage = "url(" + locationSrc + ")";
-
-			// Set location message listener
-			locationMsg.addEventListener("click", data => {
-				let mapUrl = "https://www.google.com/maps?z=15&t=m&q=loc:"+message.data.latitude+","+message.data.longitude;
-				window.open(mapUrl, "_blank");
-			});
-		}
 	}
 
 	_addListenerOnMoreOption(message, moreOption, msgList) {
@@ -745,18 +1026,20 @@ class ConversationWindow {
 				msgOptionsContainer.style.right = "15px";
 
 			// Create delete message for me option
-			let deleteMsgAttributes = [{"class":"ch-msg-delete-for-me"}];
-			let deleteMsgOption = this.utility.createElement("div", deleteMsgAttributes, LANGUAGE_PHRASES.DELETE_FOR_ME, msgOptionsContainer);
+			if(this.conversation.type === 'private') {
+				let deleteMsgAttributes = [{"class":"ch-msg-delete-for-me"}];
+				let deleteMsgOption = this.utility.createElement("div", deleteMsgAttributes, LANGUAGE_PHRASES.DELETE_FOR_ME, msgOptionsContainer);
 
-			// Add listener on delete message for me
-			deleteMsgOption.addEventListener("click", (data) => {
-				msgOptionsContainer.remove();
+				// Add listener on delete message for me
+				deleteMsgOption.addEventListener("click", (data) => {
+					msgOptionsContainer.remove();
 
-				// Delete message for me
-				this.chAdapter.deleteMessagesForMe([message.id], (err, res) => {
-					if(err) console.error(err);
-				})
-			});
+					// Delete message for me
+					this.chAdapter.deleteMessagesForMe([message.id], (err, res) => {
+						if(err) console.error(err);
+					})
+				});
+			}
 
 			if(!message.isDeleted && message.ownerId == this.widget.userId) {
 				// Create delete message for everyone option
@@ -776,15 +1059,18 @@ class ConversationWindow {
 		});
 	}
 
-	updateDeleteForEveryoneMsg(msgData) {
-	  	// Update text of deleted message
-	  	let convTargetMsg = document.getElementById("ch_message_" + msgData.deletedIds[0]);
-				if(convTargetMsg) {
-					convTargetMsg.innerHTML = "<i>" + LANGUAGE_PHRASES.MESSAGE_DELETED;
-				}
+	updateDeleteForEveryoneMsg(data) {
+		if(this.conversation.id != data.conversation.id)
+			return;
 
-			// Update listener of deleted message
-	  	let deletedMsgOptionBtn = document.getElementById(msgData.deletedIds[0]).lastChild;
+	  	// Update text of deleted message
+	  	let convTargetMsg = document.getElementById("ch_message_" + data.messages[0].id);
+		if(convTargetMsg) {
+			convTargetMsg.innerHTML = "<i>" + LANGUAGE_PHRASES.MESSAGE_DELETED;
+		}
+
+		// Update listener of deleted message
+	  	let deletedMsgOptionBtn = document.getElementById(data.messages[0].id).lastChild;
 	  	deletedMsgOptionBtn.addEventListener("click", data => {
 	  		// Remove delete for everyone option
 	  		let deleteForEveryoneBtn = document.getElementById("ch_msg_delete_for_everyone");
@@ -794,29 +1080,32 @@ class ConversationWindow {
 	  	});
 	}
 
-	handleBlockStatus(self, userId, action) {
+	handleBlock(data) {
 		if(this.conversation.isGroup)
 			return;
 
-		if(this.conversation.member.userId == userId && !self) {
-			if(action == "block") {
-				document.getElementById("ch_conv_block").style.display = "none";;
-				document.getElementById("ch_conv_unblock").style.display = "block";
-			}
-			else {
-				document.getElementById("ch_conv_unblock").style.display = "none";
-		  		document.getElementById("ch_conv_block").style.display = "block";
-			}
+		if(this.conversation.user.id == data.blockee.id) {
+			document.getElementById("ch_conv_block").style.display = "none";;
+			document.getElementById("ch_conv_unblock").style.display = "block";
 		}
 
-		if(action == "block") {
-			document.getElementById("ch_conv_status").style.visibility = "hidden";
-			document.getElementById("ch_send_box").style.visibility = "hidden";
+		// Hide status and input field
+		document.getElementById("ch_conv_status").style.visibility = "hidden";
+		document.getElementById("ch_send_box").style.visibility = "hidden";
+	}
+
+	handleUnblock(data) {
+		if(this.conversation.isGroup)
+			return;
+
+		if(this.conversation.user.id == data.unblockee.id) {
+			document.getElementById("ch_conv_unblock").style.display = "none";
+	  		document.getElementById("ch_conv_block").style.display = "block";
 		}
-		else {
-		  	document.getElementById("ch_conv_status").style.visibility = "visible";
-			document.getElementById("ch_send_box").style.visibility = "visible";
-		}
+
+		// Show status and input field
+		document.getElementById("ch_conv_status").style.visibility = "visible";
+		document.getElementById("ch_send_box").style.visibility = "visible";
 	}
 
   	handleClearConversation(conv) {
@@ -825,6 +1114,28 @@ class ConversationWindow {
 
   		document.getElementById("ch_messages_box").innerHTML = "";
   	}
+
+	handleUserJoined(data) {
+  		if(data.conversation.id != this.conversation.id) return;
+		this.conversation.isActive = true;
+		document.getElementById("ch_send_box").style.visibility = "visible";
+		document.getElementById("ch_conv_leave").style.display = "block";
+		if(this.conversation.type === 'public') {
+			document.getElementById("ch_conv_join").style.visibility = "hidden";
+		}
+	}
+
+	handleUserRemoved(data) {
+  		if(data.conversation.id != this.conversation.id) return;
+		this.conversation.isActive = false;
+		document.getElementById("ch_send_box").style.visibility = "hidden";
+		document.getElementById("ch_conv_leave").style.display = "none";
+		if(this.conversation.type === 'public') {
+			document.getElementById("ch_conv_join").style.visibility = "visible";
+		}
+	}
+
+
 }
 
 export { ConversationWindow as default };

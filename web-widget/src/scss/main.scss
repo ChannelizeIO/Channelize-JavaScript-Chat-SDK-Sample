@@ -1,0 +1,925 @@
+/*Colors Variables*/
+@import './variables';
+/*Common style start here*/
+body {
+  font-family: $ch-body-font-family;
+  font-size: $ch-body-font-size;
+}
+ul {
+  padding-left: 0;
+  margin: 0;
+}
+.left {
+  float: left;
+}
+.right {
+  float: right;
+}
+.ch-text-pointer {
+  cursor: text !important;
+}
+.ch-loader-bg {
+  position: absolute;
+  height: inherit;
+  width: 100%;
+  display: none;
+  z-index: 99;
+  background: rgba(0,0,0, 0.3);
+}
+.ch-loader {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  top: 40%;
+  border: 5px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 5px solid #0377ff;
+  width: 30px;
+  height: 30px;
+  -webkit-animation: spin 1s linear infinite; /* Safari */
+  animation: spin 1s linear infinite;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.ch-no-msg {
+  position: relative;
+  top: 50%;
+  text-align: center;
+  color: $ch-title-color;
+}
+.ch-show-element {
+  display: block !important;
+}
+.ch-launcher {
+  position: fixed;
+  bottom: $ch-launcher-bottom-position;
+  right: $ch-launcher-right-position;
+  width: $ch-launcher-width;
+  height: $ch-launcher-height;
+  cursor: pointer;
+  border-radius: $ch-launcher-border-radius;
+  background: $ch-launcher-bg-color;
+  box-shadow: rgba(0,0,0,0.3) 0 0 1.2em;
+  line-height: 80px;  
+  text-align: center; 
+  background-size: cover; 
+  .ch-launcher-image {  
+    height: 35px; 
+    width: 35px;  
+  }
+}
+/*Common header*/
+.ch-header {
+  font-size: 15px;
+  letter-spacing: .5px;
+  padding: 10px;
+  height: 30px;
+  box-shadow: 0 5px 15px rgba(0,0,0,.1);
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  position: relative;
+  z-index: 1;
+  i {
+    cursor: pointer;
+    font-size: $ch-app-icon-fontsize;
+  }
+  .ch-conversation-image {
+    margin-top: 0;
+    vertical-align: middle;
+    display: inline-block;
+    float: left;
+    position: relative;
+    height: 32px;
+    width: 32px;
+    border-radius: 50%;
+    background-size: cover;
+    margin-right: 10px;
+  }
+}
+
+#ch_snackbar {  
+  min-width: 250px;
+  margin-left: -125px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 4px;
+  padding: 13px;
+  position: fixed;
+  z-index: 1;
+  left: 50%; 
+  bottom: 30px;
+  font-size: 14px;
+  -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+  animation: fadein 0.5s, fadeout 0.5s 2.5s;
+}
+@-webkit-keyframes fadein { 
+  from {bottom: 0; opacity: 0;}   
+  to {bottom: 30px; opacity: 1;}  
+} 
+@keyframes fadein { 
+  from {bottom: 0; opacity: 0;} 
+  to {bottom: 30px; opacity: 1;}  
+} 
+@-webkit-keyframes fadeout {  
+  from {bottom: 30px; opacity: 1;}  
+  to {bottom: 0; opacity: 0;} 
+} 
+@keyframes fadeout {  
+  from {bottom: 30px; opacity: 1;}  
+  to {bottom: 0; opacity: 0;}
+}
+/*screen window scroll*/
+.ch-messages-box, .ch-recent-listing, .ch-friends-box {
+  &::-webkit-scrollbar {
+    width: .4em;
+    overflow: visible;
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    overflow: visible;
+    border-radius: 4px;
+    background: rgba(0,0,0,.2);
+  }
+}
+/*screen window common style*/
+.ch-login-window, .ch-conv-window, .ch-search-window, .ch-recent-window, .ch-members-window {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  position: fixed;
+}
+
+/*Common style end here*/
+/*Login style start here*/
+.ch-login-window {
+  box-shadow: rgba(0,0,0,0.3) 0 0 1.2em;
+  right: 1%;
+  top: 35%;
+  bottom: 0;
+  width: $ch-recent-width;
+  background-color: #fff;
+  .ch-header {
+    color : $gray-shade;
+    line-height: 34px;
+    padding-left: 20px;
+    .ch-login-close-btn {
+      color : $space-gray;
+      float: right;
+      margin-top: 5px;
+      &:hover {
+        color: $black;
+      }
+    }
+  }
+  .ch-loader-bg {
+    height: 100%;
+  }
+  .ch-dummy-container {
+    padding: 15px 20px;
+    text-align: center;
+    .ch-container-text {
+      color: $ch-title-color;
+      margin-bottom: 20px;
+    }
+    .ch-dummy-img {
+      border-radius: 50%;
+      cursor: pointer;
+      height: 40px;      
+      margin-right: 10px;
+      width: 40px;
+      &:last-child {
+        margin: 0;
+      }
+    }
+  }
+  .ch-login-btn {
+    background: #0377ff;
+    outline: none;
+    margin: 0 auto;
+    display: inherit;
+    border: 1px solid #0377ff;
+    border-radius: 25px;
+    color: #fff;
+    padding: 10px 30px;
+    font-size: 14px;
+    text-transform: uppercase;
+    box-shadow:0 1px 10px 0 rgba(0,0,0,.12);
+    -webkit-transition: all .4s ease;
+    -o-transition: all .4s ease;
+    transition: all .4s ease;
+    cursor: pointer;
+    &:hover {
+      background: transparent;
+      color: #0377ff;
+    }
+  }
+  .ch-login-name-container {
+    margin-bottom: 10px;
+    padding: 15px 20px;
+    margin-top: 15px;
+    border-bottom: 1px solid #ccc;
+    .ch-login-error {
+      display: none;
+      font-size: 85%;
+      color: red;
+      margin-top: 2px;
+    }
+    input {
+      outline: none;
+      padding: 10px;
+      width: 100%;
+      background: transparent;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-shadow: none;
+      box-sizing: border-box;
+    }
+    .ch-login-name {
+      font-size: 14px;
+      margin-bottom: 6px;
+      color: $ch-title-color;
+    }
+  }
+}
+/*Login style end here*/
+/*recent style start here*/
+.ch-recent-window {
+  right: $ch-recent-right-position;
+  top: $ch-recent-top-position;
+  bottom: $ch-recent-bottom-position;
+  width: $ch-recent-width;
+  box-shadow: rgba(0,0,0,.3) 0 0 1.2em;
+  background-color: $ch-recent-bg;
+  .ch-header {
+    background-color: $ch-recent-conversation-header-bg-color;
+    .ch-header-title {
+      display: inline-block;
+      vertical-align: middle;
+      max-width: 150px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      padding-right: 5px;
+      color: $ch-title-color;
+      font-size: $ch-title-fontsize;
+      cursor: default;
+      margin-top: 6px;
+    }
+    .ch-header-option {
+      display: inline-block;
+      float: right;
+      margin-top: 5px;
+      i {
+        color: $ch-recent-conversation-header-font-icon-color;
+        vertical-align: middle;
+        margin-right: 5px;
+        &:last-child {
+          margin-right: 0;
+        }
+        &:hover {
+          color: $ch-recent-conversation-header-font-icon-hover-color;
+        }
+      }
+    }
+  }
+  .ch-recent-listing {
+    height: calc(100% - 50px);
+    overflow: auto;
+    .ch-recent-ul {
+      margin: 0;
+      padding: 3px 0 0 0;
+      li {
+        min-height: 40px;
+        cursor: pointer;
+        list-style: none;
+        position: relative;
+        padding: 10px;
+        border-bottom: 1px solid rgba(90,122,190,.08);
+        background-color: $ch-recent-conversation-list-color;
+        .ch-conversation-image {
+          position: relative;
+          float: left;
+          height: 32px;
+          width: 32px;
+          border-radius: 50%;
+          background-size: cover;
+          margin-right: 10px;
+          margin-top: 3px;
+          .ch-online-icon {
+            background: #64ba00;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            bottom: 0;
+            position: absolute;
+            right: 1px;
+            width: 6px;
+            height: 6px;
+            display: none;
+          }
+          .ch-user-blocked { 
+            background: red !important; 
+            display: block !important;  
+          }
+        }
+        &:hover {
+          background-color: $ch-recent-conversation-list-hover-color;
+        }
+        &:last-child {
+          margin-bottom: 0;
+        }
+        #ch_title {
+          width: 55%;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
+          padding-right: 5px;
+          font-size: 13px;
+          display: block;
+          float: left;
+          color: $ch-recent-conversation-list-title-color;
+          font-weight: 400;
+          margin-top: 4px;
+          text-transform: capitalize;
+        }
+        .ch-created-at {
+          font-size: $ch-status-fontsize;
+          float: right;
+          color: $ch-status-color;
+          margin-top: 2px;
+          position: absolute;
+          right: 5px;
+          top: 14px;
+        }
+      .ch-last-msg-box {
+        width: 55%;
+        float: left;
+        margin-top: 4px;
+        img {
+          height: 10px;
+          width: 12px;
+          margin: 2px 5px 0 1px;
+          float: left;
+          vertical-align: middle;
+        }
+        .ch-last-message {
+          font-size: $ch-subtitle-fontsize;
+          color: $ch-recent-conversation-list-content-color;
+          padding-left: 0;     
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
+          height: auto;
+        }  
+      }    
+      }
+    }
+  }
+}
+/*recent style end here*/
+
+/*Search style start here*/
+.ch-search-window {
+  right: $ch-recent-right-position;
+  top: $ch-recent-top-position;
+  bottom: $ch-recent-bottom-position;
+  width: $ch-recent-width;
+  background-color: #fff;
+  .ch-header {
+    line-height: 35px;
+    text-align: center;
+    color: $ch-title-color;
+    i#ch_search_close_btn {
+      position: absolute;
+      left: 10px;      
+      top: 17px;
+      color: $ch-recent-conversation-header-font-icon-color;
+      &:hover {
+        color: $ch-recent-conversation-header-font-icon-hover-color;
+      }
+    }    
+  }
+  .ch-search-box {    
+    position: relative;
+    background: $theme-color;
+    .ch-search-input-box {
+      background: transparent;
+      outline: none;
+      border: none;
+      color: white;
+      width: 100%;
+      padding: 15px 25px 15px 15px;
+      box-sizing: border-box;
+    }
+    ::placeholder {
+      color: white;
+      opacity: 1;
+    }
+    :-ms-input-placeholder {
+     color: white;
+    }
+    ::-ms-input-placeholder {
+     color: white;
+    }
+    .ch-clear-search-icon {
+      color: #ffffff;
+      cursor: pointer;
+      font-size: 20px;
+      position: absolute;
+      top: 12px;
+      right: 8px;
+    }
+  }
+  .ch-friends-box {
+    height: calc(100% - 92px);
+    overflow: auto;
+    li {
+      cursor: pointer;
+      list-style: none;
+      position: relative;
+      padding: 10px;
+      border-bottom: 1px solid rgba(90,122,190,.08);
+      .ch-contact-img {
+        height: 32px;
+        width: 32px;
+        border-radius: 50%;
+        margin-right: 10px;
+        vertical-align: middle;
+      }
+      .ch-friend-name {
+        width: 180px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        padding-right: 5px;
+        font-size: 13px;
+        display: inline-block;
+        vertical-align: middle;
+        color: #4a505a;
+        font-weight: 400;
+        text-transform: capitalize;
+      }
+    }
+    .ch-more-users {
+      display: none;
+      color: #4a505a;
+      margin-left: 10px;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+    .ch-suggested {
+      color: #4a505a;
+      margin-left: 10px;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+  }
+}
+/*search style end here*/
+
+/*conversation style start here*/
+.ch-conv-window {
+  bottom: $ch-conv-bottom-position;
+  top: $ch-conv-top-position;
+  right: $ch-conv-right-position;
+  width: $ch-conversation-width;
+  box-shadow: rgba(0,0,0,.3) 0 0 1.2em;
+  .ch-header {
+    background-color: $ch-conversation-window-header-bg-color;
+    .ch-conv-details-wrapper {
+      display: inline-block;
+      .ch-conv-title {
+        display: inline-block;
+        vertical-align: middle;
+        max-width: 120px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        color: $ch-title-color;
+        text-transform: capitalize;
+        font-size: $ch-title-fontsize;
+        cursor: pointer;
+      }
+      .ch-conv-options {
+        vertical-align: middle;
+        color: $ch-title-color;
+      }
+      .ch-conv-status {
+        font-size: $ch-status-fontsize;
+        color: $ch-recent-conversation-header-font-icon-color;
+      }
+    }
+    .ch-conv-drop-down {
+      position: absolute;
+      display: none;
+      box-shadow: 0 5px 5px -3px rgba(0,0,0,.2), 0 8px 10px 1px rgba(0,0,0,.14), 0 3px 14px 2px rgba(0,0,0,.12);
+      z-index: 8;
+      background: #fff;
+      min-width: 100px;
+      max-width: 250px;
+      border-radius: 5px;
+      div {
+        color: #4a505a;
+        padding: 4px 12px;
+        height: auto;
+        margin: 0;
+        line-height: 20px;
+        font-size: 12px;
+        &:hover {
+          background: #0000000a;
+          cursor: pointer;
+        }
+      }
+    }
+    i#ch_conv_close_btn {
+      color: $ch-recent-conversation-header-font-icon-color;
+      position: absolute;
+      right: 10px;      
+      top: 14px;
+      &:hover {
+        color: $ch-recent-conversation-header-font-icon-hover-color;
+      }
+    }
+  }
+  .ch-messages-box {
+    height: calc(100% - 115px);
+    overflow: auto;
+    background-color: $ch-conversation-window-bg-color;
+    padding-top: 5px;
+    .ch-loader-bg {
+      background: #fff;
+    }
+    .ch-msg-loader {
+      float: right;
+      padding: 5px 0;
+      background-size: 70px;
+      position: relative;
+      background-position: center;
+      background-repeat: no-repeat;
+      height: 140px;
+      min-width: 180px;
+      border: 1px solid #eee;
+      border-radius: 6px 6px 0;
+    }
+    .ch-admin-msg {
+      text-align: center;
+      color: #969391;
+      margin-bottom: 4px;
+      padding: 0 10px;
+      font-size: 11px;
+    }
+    .ch-msg-list {
+      position: relative;
+      float: left;
+      width: 100%;
+      padding: 5px 0;
+      .ch-msg-container {
+        clear: both;
+        margin-bottom: 0;
+        position: relative;
+        overflow: hidden;
+        audio#ch_audio_message {
+          margin-top: -10px;
+          width: 295px;
+          height: 38px;
+          margin-left: -33px;
+          margin-right: -33px;
+          margin-bottom: -14px;
+          background-color: #f1f3f4;
+          transform: scaleX(0.9);
+        }
+      }
+      i.ch-msg-more-option {
+        color: #6e7174;
+        font-size: 15px;
+        margin-top: 2px;
+        cursor: pointer;
+      }
+      .ch-msg-option-container {
+        position: absolute;
+        box-shadow: rgba(0,0,0,0.3) 0 0 1.2em;
+        z-index: 8;
+        background: #fff;
+        min-width: 100px;
+        max-width: 250px;
+        border-radius: 4px;
+        div {
+          color: #4a505a;
+          padding: 4px 12px;
+          height: auto;
+          margin: 0;
+          line-height: 20px;
+          font-size: 12px;
+          &:hover {
+            background: #0000000a;
+            cursor: pointer;
+          }
+        }
+      }
+      .ch-sender-name {
+        font-size: 13px;
+        margin-left: 7px;
+        margin-bottom: 5px;
+        text-transform: capitalize;
+        color: $ch-conversation-window-msg-owner-color;
+      }
+      .ch-msg-container.left {
+        float: left;
+        max-width: 220px;
+        margin-left: 8px;
+        span.ch-msg-time {
+          font-size: 10px;
+          display: inline-block;
+          vertical-align: middle;
+          color: #969391;
+        }
+        .ch-message {
+          overflow: hidden;
+          background: $ch-conversation-window-msg-bg-color;
+          border-radius: 6px 6px 6px 0;
+          position: relative;
+          color: $ch-conversation-window-msg-color;
+          padding: 10px;
+          word-break: break-word;
+          .ch-video-message, .ch-image-message, .ch-location-message, .ch-sticker-message {
+            background-size: cover;
+            position: relative;
+            cursor: pointer;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 140px;
+            min-width: 180px;
+            margin: -10px;
+            border: 1px solid #eee;
+            border-radius: 6px 6px 6px 0;
+            .ch-play-icon {
+              position: absolute;
+              left: 0;
+              right: 0;
+              top: 28%;
+              text-align: center;
+              color: #fff;
+              font-size: 55px;
+          }
+        }
+        .ch-audio-message {
+          width: 220px;
+          margin: -10px;
+        }
+      }
+      }
+      .ch-msg-container.right {
+        float: right;
+        max-width: 220px;
+        color: #969391;
+        margin-right: 8px;
+        text-align: right;
+        .ch-msg-time {
+          margin-right: 5px;
+          font-size: 10px;
+          display: inline-block;
+          vertical-align: middle;
+          color: #969391;
+        }
+        i.ch-msg-status {
+          font-size: 10px;
+          display: inline-block;
+          vertical-align: middle;
+          color: #969391;
+          margin-right: 5px;
+        }
+        .ch-message {
+          background-color: $ch-conversation-window-user-msg-bg-color;
+          border-radius: 6px 6px 0;
+          overflow: hidden;
+          display: block;
+          color: $ch-conversation-window-user-msg-color;
+          margin-bottom: 1px;
+          text-align: left;
+          padding: 10px;
+          word-break: break-word;
+        }
+        .ch-video-message, .ch-image-message, .ch-location-message, .ch-sticker-message {
+          background-size: cover;
+          position: relative;
+          cursor: pointer;
+          background-position: center;
+          background-repeat: no-repeat;
+          height: 140px;
+          min-width: 180px;
+          margin: -10px;
+          border: 1px solid #eee;
+          border-radius: 6px 6px 0;
+          .ch-play-icon {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 28%;
+            text-align: center;
+            color: #fff;
+            font-size: 55px;
+        }
+      }
+      }
+    }
+    
+  }
+  .ch-send-box {
+    padding: 8px 10px 0;
+    border-top: 1px solid rgba(90,122,190,.08);
+    min-height: 50px;
+    background: $ch-conversation-window-composer-bg-color;
+    font-size: 13px;
+    position: relative;
+    textarea {
+      outline: none;
+      border: none;
+      width: calc(100% - 54px);
+      color: $ch-conversation-window-composer-text-color;
+      padding: 0px 5px 0 0;
+      resize: none;
+      font-size: 13px;
+      vertical-align: bottom;
+      font-family: $ch-body-font-family;
+      background: transparent;
+    }
+    button {
+      padding: 11px 0 0 0;
+      margin: 0;
+      background: transparent;
+      border: none;
+      outline: none;
+      vertical-align: super;
+      cursor: pointer;
+      i.ch-send-icon {
+        font-size: $ch-app-icon-fontsize;
+        color: $ch-conversation-window-composer-font-icon-color;
+      }
+    }
+    .ch-attachment-btn {
+      margin-right: 5px;
+      display: inline-block;
+      vertical-align: super;
+      font-size: 22px;
+      cursor: pointer;
+      color: $ch-conversation-window-composer-font-icon-color;
+    }
+    .ch-media-docker {
+      position: absolute;
+      opacity: 0;
+      visibility: hidden;
+      bottom: -100px;
+      left: 0;
+      right: 0;
+      background: #fff;
+      padding: 10px;
+      z-index: 99;
+      transition: .5s;
+      -webkit-box-shadow: 0 -4px 8px 0 rgba(0,0,0,0.2);
+      -webkit-transition: .5s;
+      box-shadow: 0 -4px 8px 0 rgba(0,0,0,0.2);
+      border-radius: 10px 10px 0 0;
+      overflow: hidden;
+      text-align: center;
+      .ch-video-option{
+        margin-right: 0 !important;
+      }
+      .ch-image-option, .ch-audio-option, .ch-video-option {
+        display: inline-block;      
+        position: relative;
+        text-align: center;
+        margin-right: 35px;
+        color: $dark-gray;
+        .ch-image-icon-span{
+          background-color: #64b5f6;
+        }
+        .ch-audio-icon-span{
+          background-color: #ff8a65;
+        }
+        .ch-video-icon-span{
+          background-color: #f7dc6f;
+        }      
+        .ch-image-icon-span, .ch-audio-icon-span, .ch-video-icon-span {
+          height: 45px;
+          width: 45px;        
+          display: block;
+          text-align: center;
+          line-height: 53px;
+          border-radius: 50%;
+          margin-bottom: 2px;
+          cursor: pointer;
+          img {
+            width: 16px;
+          }
+        }
+        input {
+          opacity: 0;
+          width: 50px;
+          height: 50px;
+          position: absolute;
+          top: 0;
+          cursor: pointer;
+          left: 0;
+        }    
+      }
+    }
+    .ch-show-docker.ch-media-docker {
+      opacity: 1;
+      bottom: 100%;
+      visibility: visible;
+    }
+  }
+  .ch-footer {
+    .ch-conv-join {
+      position: absolute;
+      bottom: 0;
+      background: $theme-color;
+      color: $white-color;
+      width: 100%;
+      padding: 8px;
+    }
+  }
+}
+/*conversation style end here*/
+
+/*Members style start here*/
+
+.ch-members-window {
+  right: 24%;
+  top: 35%;
+  bottom: 0;
+  width: 22%;
+  background-color: #fff;
+  box-shadow: rgba(0,0,0,.3) 0 0 1.2em;
+  .ch-header {
+    line-height: 35px;
+    text-align: center;
+    color: $ch-title-color;
+    i#ch_members_close_btn {
+      position: absolute;
+      left: 10px;      
+      top: 17px;
+      color: $ch-recent-conversation-header-font-icon-color;
+      &:hover {
+        color: $ch-recent-conversation-header-font-icon-hover-color;
+      }
+    }    
+  }
+  .ch-members-box {
+    height: calc(100% - 92px);
+    overflow: auto;
+    li {
+      cursor: pointer;
+      list-style: none;
+      position: relative;
+      padding: 10px;
+      min-height: 32px;
+      border-bottom: 1px solid rgba(90,122,190,.08);
+      .ch-member-img {
+        height: 32px;
+        width: 32px;
+        border-radius: 50%;
+        float: left;
+        margin-right: 10px;
+        position: relative;
+        background-size: cover; 
+        .ch-online-icon {
+          background: #64ba00;
+          border-radius: 50%;
+          border: 2px solid #fff;
+          bottom: 0;
+          position: absolute;
+          right: 1px;
+          width: 6px;
+          height: 6px;
+          display: none;
+        }
+      }
+      .ch-member-name {
+        width: 180px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        padding-right: 5px;
+        font-size: 13px;
+        display: inline-block;
+        vertical-align: middle;
+        color: #4a505a;
+        font-weight: 400;
+        margin-top: 8px;
+        text-transform: capitalize;
+      }
+    }
+  }
+}
+
+/*Members style end here*/

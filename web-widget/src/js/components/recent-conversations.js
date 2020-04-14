@@ -91,7 +91,7 @@ class RecentConversations {
 
 	_loadConversations() {
 		// Load conversations
-		this.chAdapter.getConversationsList(this.limit, this.skip, null, (err, conversations) => {
+		this.chAdapter.getConversationsList(this.limit, this.skip, null, "members", null, null, null, null, null, (err, conversations) => {
 			if(err) return console.error(err);
 
 			this.conversations = conversations;
@@ -115,6 +115,7 @@ class RecentConversations {
 		let ul = document.getElementById("ch_recent_ul");
 
 		conversations.forEach(conversation => {
+			// modify conversation object
 			conversation = this.modifyConversation(conversation);
 
 			// Create list of conversations
@@ -138,9 +139,9 @@ class RecentConversations {
 			let imgDiv = this.utility.createElement("div", imgAttributes, null, list);
 			imgDiv.style.backgroundImage = "url(" + conversation.profileImageUrl + ")";
 
-			if(!conversation.isGroup) {
+			if(!conversation.isGroup && conversation.user) {
 				// Create online icon
-				let iconAttributes = [{"id":conversation.member.userId+"_online_icon"},{"class":"ch-online-icon"}];
+				let iconAttributes = [{"id":conversation.user.id+"_online_icon"},{"class":"ch-online-icon"}];
 				let icon = this.utility.createElement("span", iconAttributes, null, imgDiv);
 
 				// Show block icon
@@ -149,7 +150,7 @@ class RecentConversations {
 				}
 
 				// Show online icon
-				if(conversation.member.user && conversation.member.user.isOnline) {
+				if(conversation.user && conversation.user.isOnline) {
 					icon.classList.add("ch-show-element");
 				}
 			}
@@ -166,7 +167,7 @@ class RecentConversations {
 			let lastMsgBoxAttributes = [{"id":"ch_last_msg_box"},{"class":"ch-last-msg-box"}];
 			let lastMsgBox = this.utility.createElement("div", lastMsgBoxAttributes, null, list);
 
-			if(conversation.lastMessageType != "text") {
+			if(conversation.lastMessageIcon) {
 				// Create last message icon
 				let msgIconAttributes = [{"id":"ch_msg_type_icon"},{"class":"ch-msg-type-icon"},{"src":conversation.lastMessageIcon}];
 				this.utility.createElement("img", msgIconAttributes, null, lastMsgBox);
@@ -187,97 +188,116 @@ class RecentConversations {
 	}
 
 	modifyConversation(conversation) {
-		let member = conversation.membersList.find(member => member.userId != this.widget.userId);
-		if (!member || !member.user) {
+		if (!conversation.isGroup && Object.entries(conversation.user).length === 0) {
 			conversation.title = LANGUAGE_PHRASES.DELETED_MEMBER;
-			conversation.profileImageUrl = null;
+			conversation.profileImageUrl = IMAGES.AVTAR;
 			return conversation;
     	}
 
     	// Set last message of conversation
-    	let loginUser = conversation.membersList.find(member => member.userId == this.widget.userId);
-		conversation = this._setLastMessage(conversation, loginUser.lastMessage);
+		conversation = this._setLastMessage(conversation, conversation.lastMessage);
 
 	    // Set profile Image, title and status of conversation
 		if(conversation.isGroup) {
 			conversation.profileImageUrl = conversation.profileImageUrl ? conversation.profileImageUrl : IMAGES.GROUP;
+			conversation.status = conversation.memberCount + " " + LANGUAGE_PHRASES.MEMBERS;
 		}
 		else {
-			conversation.profileImageUrl = member.user.profileImageUrl ? member.user.profileImageUrl : IMAGES.AVTAR;
-			conversation.member = member;
-			conversation.title = member.user.displayName;
+			conversation.profileImageUrl = conversation.user.profileImageUrl ? conversation.user.profileImageUrl : IMAGES.AVTAR;
+			conversation.title = conversation.user.displayName;
 
 			// Set block user status
-			if(!member.isActive)
+			let member = conversation.members.find(member => member.userId == conversation.user.id);
+			if(!member) {
 				conversation.blockedByMember = true;
+				conversation.status = "";
+			}
+			else {
+				conversation.blockedByMember = member ? false : true;
+				if(!conversation.isActive) {
+					conversation.blockedByUser = true;
+				}
 
-			if(!loginUser.isActive)
-			conversation.blockedByUser = true;
+				if(conversation.user.isOnline) {
+					conversation.status = LANGUAGE_PHRASES.ONLINE;
+				}
+				else if(conversation.user.lastSeen) {
+					conversation.status = LANGUAGE_PHRASES.LAST_SEEN + this.utility.updateTimeFormat(member.user.lastSeen);
+				}
+			}
 		}
+		conversation.isModified = true;
 		return conversation;
 	}
 
 	_setLastMessage(conversation, message) {
 		if(!message)
 			return conversation;
+
 		// Set lastMessage of conersation
-		if(!message.contentType || message.contentType == 0) {
-			if(message.isDeleted) {
-				conversation.lastMessageType = "text";
-				conversation.lastMessageBody = "<i>" + LANGUAGE_PHRASES.MESSAGE_DELETED;
-			}
-			else if(message.attachmentType && message.attachmentType != "text") {
-				let icon;
+		conversation.lastMessage = message;
+		if(message.isDeleted) {
+			conversation.lastMessageIcon = null;
+			conversation.lastMessageBody = "<i>" + LANGUAGE_PHRASES.MESSAGE_DELETED;
+		}
+		else if(message.type != "normal") {
+			conversation.lastMessageIcon = null;
+			conversation.lastMessageBody = this._modifyMessageBody(message);
+		}
+		else if(message.attachments && message.attachments.length) {
 
-				switch(message.attachmentType) {
-					case "image":
-						icon = IMAGES.GALLERY_ICON;
-						conversation.lastMessageBody = LANGUAGE_PHRASES.IMAGE;
-						break;
+			switch(message.attachments[0].type) {
+				case "image":
+					conversation.lastMessageIcon = IMAGES.GALLERY_ICON;
+					conversation.lastMessageBody = LANGUAGE_PHRASES.IMAGE;
+					break;
 
-					case "audio":
-						icon = IMAGES.AUDIO_ICON;
-						conversation.lastMessageBody = LANGUAGE_PHRASES.AUDIO;
-						break;
+				case "audio":
+					conversation.lastMessageIcon = IMAGES.AUDIO_ICON;
+					conversation.lastMessageBody = LANGUAGE_PHRASES.AUDIO;
+					break;
 
-					case "video":
-						icon = IMAGES.GALLERY_ICON;
-						conversation.lastMessageBody = LANGUAGE_PHRASES.VIDEO;
-						break;
-				}
-				conversation.lastMessageType = message.attachmentType;
-				conversation.lastMessageIcon = icon;
-			}
-			else {
-				conversation.lastMessageType = "text";
-				conversation.lastMessageBody = message.body;
+				case "video":
+					conversation.lastMessageIcon = IMAGES.GALLERY_ICON;
+					conversation.lastMessageBody = LANGUAGE_PHRASES.VIDEO;
+					break;
+
+				case "location":
+					conversation.lastMessageIcon = IMAGES.LOCATION_ICON;
+					conversation.lastMessageBody = LANGUAGE_PHRASES.LOCATION;
+					break;
+
+				case "sticker":
+					conversation.lastMessageIcon = IMAGES.STICKER_ICON;
+					conversation.lastMessageBody = LANGUAGE_PHRASES.STICKER;
+					break;
+
+				case "gif":
+					conversation.lastMessageIcon = IMAGES.GIF_ICON;
+					conversation.lastMessageBody = LANGUAGE_PHRASES.GIF;
+					break;
+
+				case "text":
+					conversation.lastMessageIcon = IMAGES.GALLERY_ICON;
+					conversation.lastMessageBody = message.body;
+					break;
+
+				default:
+					conversation.lastMessageIcon = IMAGES.GALLERY_ICON;
+					conversation.lastMessageBody = LANGUAGE_PHRASES.ATTACHMENT;
 			}
 		}
-		else if(message.contentType == 2) {
-			if(message.attachmentType == "sticker") {
-				conversation.lastMessageBody = LANGUAGE_PHRASES.STICKER;
-				conversation.lastMessageType = "sticker";
-				conversation.lastMessageIcon = IMAGES.STICKER_ICON;
-			}
-			else {
-				conversation.lastMessageBody = LANGUAGE_PHRASES.GIF;
-				conversation.lastMessageType = "gif";
-				conversation.lastMessageIcon = IMAGES.GIF_ICON;
-			}
-		}
-		else if(message.contentType == 3) {
-			conversation.lastMessageBody = LANGUAGE_PHRASES.LOCATION;
-			conversation.lastMessageType = "location";
-			conversation.lastMessageIcon = IMAGES.LOCATION_ICON;
+		else {
+			conversation.lastMessageIcon = null;
+			conversation.lastMessageBody = message.body;
 		}
 
 		// Set Last Message time
-		if(!message.recipients.length) {
+		if(!message.updatedAt) {
 			conversation.lastMessageTime = this.utility.updateTimeFormat(Date());
 		}
 		else {
-			let loginUser = conversation.membersList.find(member => member.userId == this.widget.userId);
-			conversation.lastMessageTime = this.utility.updateTimeFormat(loginUser.updatedAt);
+			conversation.lastMessageTime = this.utility.updateTimeFormat(message.updatedAt);
 		}
 		
 		// Set last message Id
@@ -286,7 +306,7 @@ class RecentConversations {
 	}
 
 	deleteLastMessage(data, updatedLastMsg) {
-		let targetLastMsg = document.getElementById("ch_msg_" + data.messageIds[0]);
+		let targetLastMsg = document.getElementById("ch_msg_" + data.messages[0].id);
 		if(!updatedLastMsg) {
 			targetLastMsg.innerHTML = "";
 			return;
@@ -354,46 +374,68 @@ class RecentConversations {
 		}
 	}
 
-	updateNewMessage(message) {
+	updateNewMessage(message, newConversation = null) {
 		if(!message) {
 			return;
 		}
 
-		let convToUpdate = this.conversations.find(conv => conv.id == message.chatId);
+		let convToUpdate = this.conversations.find(conv => conv.id == message.conversationId);
 
-		// Update recent conversation list if exist
-		if(convToUpdate && document.getElementById(convToUpdate.id)) {
+		if(newConversation) {
+			// Remove no message tag if exist
+			if(document.getElementById("ch_no_msg")) {
+				document.getElementById("ch_no_msg").remove();
+			}
+
+			newConversation = this.modifyConversation(newConversation);
+			this.conversations = this.conversations.concat(newConversation);
+			this._addNewConversationInList(newConversation);
+		}
+		else {
 			document.getElementById(convToUpdate.id).remove();
 			convToUpdate = this._setLastMessage(convToUpdate, message);
 			this._addNewConversationInList(convToUpdate);
 		}
-		else {
-			// Get new conversation object
-			this.chAdapter.getConversation(message.chatId, (err, conversation) => {
-				if(err) return console.error(err);
+	}
 
-				// Remove no message tag if exist
-				if(document.getElementById("ch_no_msg"))
-					document.getElementById("ch_no_msg").remove();
+	_modifyMessageBody(message) {
+		if(!message)
+			return;
 
-				conversation = this.modifyConversation(conversation);
-				this.conversations = this.conversations.concat(conversation);
-				this._addNewConversationInList(conversation);
+		// Handle meta message
+		if(message.type == "admin") {
+			let body;
 
-				// Replace dummy conversation with new conversation
-				this.widget.convWindows.forEach(conversationWindow => {
-					if(conversationWindow.conversation.isDummyObject) {
-						if(document.getElementById("ch_conv_window")) {
-							document.getElementById("ch_conv_window").remove();
-							this.widget.convWindows.pop();
-						}
+			// adminMessageType
+			switch(message.body) {
+				case "admin_group_create" :
+					body = "<i>" + LANGUAGE_PHRASES.GROUP_CREATED;
+					break;
 
-						const conversationWindow = new ConversationWindow(this.widget);
-						conversationWindow.init(conversation);
-						this.widget.convWindows.push(conversationWindow);
-					}
-				});
-			});
+				case "admin_group_change_photo" :
+					body = "<i>" + LANGUAGE_PHRASES.GROUP_PHOTO_CHANGED;
+					break;
+
+				case "admin_group_change_title" :
+					body = "<i>" + LANGUAGE_PHRASES.GROUP_TITLE_CHANGED;
+					break;
+
+				case "admin_group_add_members" :
+					body = "<i>" + LANGUAGE_PHRASES.GROUP_MEMBER_ADDED;
+					break;
+
+				case "admin_group_remove_members" :
+					body = "<i>" + LANGUAGE_PHRASES.GROUP_MEMBER_REMOVED;
+					break;
+
+				case "admin_group_make_admin" :
+					body = "<i>" + LANGUAGE_PHRASES.GROUP_ADMIN_UPDATED;
+					break;
+
+				default:
+					body = "<i>" + message.type + " message";
+			}
+			return body;
 		}
 	}
 
@@ -401,9 +443,15 @@ class RecentConversations {
 		if(!this.conversations)
 			return;
 
-		const index = this.conversations.findIndex(conversation => conversation.member.userId == user.id);
+		const index = this.conversations.findIndex(conversation => conversation.user.id == user.id);
 		if(index != -1) {
-			this.conversations[index].member.user = user;
+			this.conversations[index].user = user;
+			if(user.isOnline) {
+				this.conversations[index].status = LANGUAGE_PHRASES.ONLINE;
+			}
+			else {
+				this.conversations[index].status = LANGUAGE_PHRASES.LAST_SEEN + this.utility.updateTimeFormat(user.lastSeen);
+			}
 		}
 
 		// Update block/unblock icon
@@ -419,6 +467,13 @@ class RecentConversations {
 		}
 	}
 
+	updateReadAt(data) {
+		let index = this.conversations.findIndex(conv => conv.id == data.conversation.id);
+		if(index != -1) {
+			this.conversations[index].lastReadAt[data.userId] = data.timestamp;
+		}
+	}
+
 	_addNewConversationInList(conversation) {
 		// Add new conversation in recent conversation list
 		let ul = document.getElementById("ch_recent_ul");
@@ -426,7 +481,7 @@ class RecentConversations {
 		let newConvlist = this.utility.createElement("li", listAttributes, null, null);
 		ul.insertBefore(newConvlist, ul.childNodes[0]);
 
-		// Add event listener on new conversation
+		// Add event listener on new conversation list
 		newConvlist.addEventListener("click", (data) => {
 			if(document.getElementById("ch_conv_window")) {
 				document.getElementById("ch_conv_window").remove();
@@ -443,9 +498,9 @@ class RecentConversations {
 		let imgDiv = this.utility.createElement("div", imgAttributes, null, newConvlist);
 		imgDiv.style.backgroundImage = "url(" + conversation.profileImageUrl + ")";
 
-		if(!conversation.isGroup) {
+		if(!conversation.isGroup && conversation.user) {
 			// Create online icon
-			let iconAttributes = [{"id":conversation.member.userId+"_online_icon"},{"class":"ch-online-icon"}];
+			let iconAttributes = [{"id":conversation.user.id+"_online_icon"},{"class":"ch-online-icon"}];
 			let icon = this.utility.createElement("span", iconAttributes, null, imgDiv);
 
 			// Show block icon
@@ -454,7 +509,7 @@ class RecentConversations {
 			}
 
 			// Show online icon
-			if(conversation.member.user && conversation.member.user.isOnline) {
+			if(conversation.user && conversation.user.isOnline) {
 				icon.classList.add("ch-show-element");
 			}
 		}
@@ -471,7 +526,7 @@ class RecentConversations {
 		let lastMsgBoxAttributes = [{"id":"ch_last_msg_box"},{"class":"ch-last-msg-box"}];
 		let lastMsgBox = this.utility.createElement("div", lastMsgBoxAttributes, null, newConvlist);
 
-		if(conversation.lastMessageType != "text") {
+		if(conversation.lastMessageIcon) {
 			// Create last message icon
 			let msgIconAttributes = [{"id":"ch_msg_type_icon"},{"class":"ch-msg-type-icon"},{"src":conversation.lastMessageIcon}];
 			this.utility.createElement("img", msgIconAttributes, null, lastMsgBox);
@@ -489,7 +544,7 @@ class RecentConversations {
 	_loadMoreConversations() {
 		++this.loadCount;
 		this.skip = this.loadCount * this.limit;
-		this.chAdapter.getConversationsList(this.limit, this.skip, null, (err, conversations) => {
+		this.chAdapter.getConversationsList(this.limit, this.skip, null, "members", null, null, null, null, null, (err, conversations) => {
 			if(err) return console.error(err);
 
 			this._createConversationListing(conversations);
@@ -551,26 +606,58 @@ class RecentConversations {
 		});
 	}
 
-	handleBlockStatus(self, userId, action) {
+	handleBlock(data) {
 		this.conversations.forEach(conversation => {
 			if(conversation.isGroup)
 				return;
 
-			if(conversation.member.userId == userId && self) {
-				conversation.blockedByMember = (action == "block") ? true : false;
+			if(conversation.user.id == data.blocker.id) {
+				conversation.blockedByMember = true;
 			}
-			else if(conversation.member.userId == userId && !self) {
-				conversation.blockedByUser = (action == "block") ? true : false;
+			else if(conversation.user.id == data.blockee.id) {
+				conversation.blockedByUser = true;
 			}
 		});
 
-		let onlineIcon = document.getElementById(userId+"_online_icon");
-		if(onlineIcon && (action == "block")) {
+		let onlineIcon = document.getElementById(data.blockee.id+"_online_icon");
+		if(onlineIcon) {
 			onlineIcon.classList.add("ch-user-blocked");
 		}
-		else if(onlineIcon && (action == "unblock")) {
+	}
+
+	handleUnblock(data) {
+		this.conversations.forEach(conversation => {
+			if(conversation.isGroup)
+				return;
+
+			if(conversation.user.id == data.unblocker.id) {
+				conversation.blockedByMember = false;
+			}
+			else if(conversation.user.id == data.unblockee.id) {
+				conversation.blockedByUser = false;
+			}
+		});
+
+		let onlineIcon = document.getElementById(data.unblockee.id+"_online_icon");
+		if(onlineIcon) {
 			onlineIcon.classList.remove("ch-user-blocked");
 		}
+	}
+
+	handleUserJoined(data) {
+		this.conversations.forEach(conversation => {
+			if(conversation.user.id == data.conversation.id) {
+				conversation.isActive = true;
+			}
+		});
+	}
+
+	handleUserRemoved(data) {
+		this.conversations.forEach(conversation => {
+			if(conversation.user.id == data.conversation.id) {
+				conversation.isActive = false;
+			}
+		});
 	}
 }
 

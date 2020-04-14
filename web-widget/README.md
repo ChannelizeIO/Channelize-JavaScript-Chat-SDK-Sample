@@ -24,7 +24,7 @@ Add the Channelize widget div in the body tag of your website.
 Import the `widget.Channelize.js` file after body tag in your website.
 
 ```javascript
-<script src="https://cdn.channelize.io/apps/web-widget/1.0.0/widget.Channelize.js"></script>
+<script src="https://cdn.channelize.io/apps/web-widget/2.0.1/widget.Channelize.js"></script>
 ```
 
 ##### Step 3: Import Channelize JS-SDK #####
@@ -32,7 +32,7 @@ Import the `widget.Channelize.js` file after body tag in your website.
 Import the [`Channelize JS-SDK`](https://docs.channelize.io/javascript-sdk-introduction-overview) after body tag in your website.
 
 ```javascript
-<script src="https://cdn.channelize.io/apps/web-widget/1.0.0/channelize-websdk-min.js"></script>
+<script src="https://cdn.channelize.io/apps/web-widget/2.0.0/channelize-websdk.js"></script>
 ```
 
 ##### Step 4: Create widget object #####

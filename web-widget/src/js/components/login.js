@@ -45,7 +45,7 @@ class Login {
 		this.utility.createElement("div", loginNameAttributes, LANGUAGE_PHRASES.NAME, loginNameContainer);
 
 		// Create input div
-		let loginNameInputAttributes = [{"id":"ch_login_name_input"},{"class":"ch-login-name-input"},{"type":"text"}];
+		let loginNameInputAttributes = [{"id":"ch_login_name_input"},{"class":"ch-login-name-input"},{"type":"text"},{"placeholder":"Enter a name"}];
 		this.utility.createElement("input", loginNameInputAttributes, null, loginNameContainer);
 
 		// Create error div
@@ -74,7 +74,7 @@ class Login {
 		let user1 = this.utility.createElement("img", dummyUser1Attributes, null, dummyContainer);
 
 		user1.addEventListener("click", (data) => {
-			const email = "test1@channelize.io";
+			const email = "test1@seaddons.com";
 			const password = "123456";
 			this._loginUser(email, password, true);
 		});
@@ -84,7 +84,7 @@ class Login {
 		let user2 = this.utility.createElement("img", dummyUser2Attributes, null, dummyContainer);
 
 		user2.addEventListener("click", (data) => {
-			const email = "test2@channelize.io";
+			const email = "test2@seaddons.com";
 			const password = "123456";
 			this._loginUser(email, password, true);
 		});
@@ -94,8 +94,8 @@ class Login {
 		let user3 = this.utility.createElement("img", dummyUser3Attributes, null, dummyContainer);
 
 		user3.addEventListener("click", (data) => {
-			const email = "test3@channelize.io";
-			const password = "123456";
+			const email = "test@channelize.io";
+			const password = "Test@123456";
 			this._loginUser(email, password, true);
 		});
 
@@ -104,8 +104,8 @@ class Login {
 		let user4 = this.utility.createElement("img", dummyUser4Attributes, null, dummyContainer);
 
 		user4.addEventListener("click", (data) => {
-			const email = "test4@channelize.io";
-			const password = "123456";
+			const email = "heyley@channelize.io";
+			const password = "Test@123456";
 			this._loginUser(email, password, true);
 		});
 	}
@@ -123,8 +123,8 @@ class Login {
 
 		document.getElementById("ch_login_loader_container").style.display = "block";
 
-		var email = name.replace(/\s/g, '').toLowerCase() + '@gmail.com';
-		const password = "12345";
+		var email = name.replace(/\s/g, '').toLowerCase() + "@channelize.io";
+		const password = "123456";
 
 		// Create a new user
 		this.chAdapter.createUser(name, email, password, (err, user) => {
@@ -163,17 +163,19 @@ class Login {
 					document.getElementById("ch_login_window").remove();
 				}
 				else {
+					new RecentConversations(this.widget);
 					// Add channelize.io team as a friend
-					const channelizeTeamId = "16d31770-8843-11e9-88fd-33cb21cf39cd"; // Channelize.io account ID
+					// const channelizeTeamId = "16d31770-8843-11e9-88fd-33cb21cf39cd"; // Channelize.io account ID
 
-					this.chAdapter.addFriend(channelizeTeamId, 2, (err, res) => {
-						if(err) return console.error(err);
+					// this.chAdapter.addFriend(channelizeTeamId, 2, (err, res) => {
+					// 	if(err) return console.error(err);
 
-						// Open recent conversation window
-						new RecentConversations(this.widget);
-						// Close login window
-						document.getElementById("ch_login_window").remove();
-					});
+					// 	// Open recent conversation window
+					// 	new RecentConversations(this.widget);
+					// });
+
+					// Close login window
+					document.getElementById("ch_login_window").remove();
 				}
 			});
 		});

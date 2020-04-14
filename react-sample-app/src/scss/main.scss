@@ -19,7 +19,6 @@ ul {
   position: absolute;
   height: inherit;
   width: 100%;
-  display: none;
   z-index: 99;
   background: rgba(0,0,0, 0.3);
 }
@@ -89,7 +88,7 @@ ul {
     cursor: pointer;
     font-size: $ch-app-icon-fontsize;
   }
-  .ch-conversation-image {
+  .ch-header-image {
     margin-top: 0;
     vertical-align: middle;
     display: inline-block;
@@ -100,6 +99,9 @@ ul {
     border-radius: 50%;
     background-size: cover;
     margin-right: 10px;
+  }
+  .ch-details-wrapper {
+    display: inline-block;
   }
 }
 
@@ -248,7 +250,8 @@ ul {
   }
 }
 /*Login style end here*/
-/*recent style start here*/
+
+/* Recent style start here */
 .ch-recent-window {
   right: $ch-recent-right-position;
   top: $ch-recent-top-position;
@@ -259,6 +262,7 @@ ul {
   .ch-header {
     background-color: $ch-recent-conversation-header-bg-color;
     .ch-header-title {
+      margin-top: 7px;
       display: inline-block;
       vertical-align: middle;
       max-width: 150px;
@@ -269,7 +273,6 @@ ul {
       color: $ch-title-color;
       font-size: $ch-title-fontsize;
       cursor: default;
-      margin-top: 6px;
     }
     .ch-header-option {
       display: inline-block;
@@ -456,7 +459,6 @@ ul {
       }
     }
     .ch-more-users {
-      display: none;
       color: #4a505a;
       margin-left: 10px;
       margin-top: 10px;
@@ -480,9 +482,9 @@ ul {
   box-shadow: rgba(0,0,0,.3) 0 0 1.2em;
   .ch-header {
     background-color: $ch-conversation-window-header-bg-color;
-    .ch-conv-details-wrapper {
+    .ch-details-wrapper {
       display: inline-block;
-      .ch-conv-title {
+      .ch-header-title {
         display: inline-block;
         vertical-align: middle;
         max-width: 120px;
@@ -504,7 +506,6 @@ ul {
     }
     .ch-conv-drop-down {
       position: absolute;
-      display: none;
       box-shadow: 0 5px 5px -3px rgba(0,0,0,.2), 0 8px 10px 1px rgba(0,0,0,.14), 0 3px 14px 2px rgba(0,0,0,.12);
       z-index: 8;
       background: #fff;
