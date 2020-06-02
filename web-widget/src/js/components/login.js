@@ -164,15 +164,6 @@ class Login {
 				}
 				else {
 					new RecentConversations(this.widget);
-					// Add channelize.io team as a friend
-					// const channelizeTeamId = "16d31770-8843-11e9-88fd-33cb21cf39cd"; // Channelize.io account ID
-
-					// this.chAdapter.addFriend(channelizeTeamId, 2, (err, res) => {
-					// 	if(err) return console.error(err);
-
-					// 	// Open recent conversation window
-					// 	new RecentConversations(this.widget);
-					// });
 
 					// Close login window
 					document.getElementById("ch_login_window").remove();

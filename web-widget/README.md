@@ -24,7 +24,7 @@ Add the Channelize widget div in the body tag of your website.
 Import the `widget.Channelize.js` file after body tag in your website.
 
 ```javascript
-<script src="https://cdn.channelize.io/apps/web-widget/2.0.1/widget.Channelize.js"></script>
+<script src="https://cdn.channelize.io/apps/web-widget/2.0.2/widget.Channelize.js"></script>
 ```
 
 ##### Step 3: Import Channelize JS-SDK #####
@@ -32,7 +32,7 @@ Import the `widget.Channelize.js` file after body tag in your website.
 Import the [`Channelize JS-SDK`](https://docs.channelize.io/javascript-sdk-introduction-overview) after body tag in your website.
 
 ```javascript
-<script src="https://cdn.channelize.io/apps/web-widget/2.0.0/channelize-websdk.js"></script>
+<script src="https://cdn.channelize.io/sdk/4.2.0/browser.js"></script>
 ```
 
 ##### Step 4: Create widget object #####
@@ -109,16 +109,17 @@ Load the recent conversations screen using `loadRecentConversation()` method. It
 ```
 
 ### Load Conversation Window
-Load conversation window using `loadConversationWindow()` method. It requires two arguments otherMemberId and conversationId.
+Load conversation window using `loadConversationWindow()` method. It requires conversation-id as argument.
 
-```html
-...
+```js
+    loadConversationWindow(conversationId)
+```
 
-    <script>
-        const channelizeWidget = new ChannelizeWidget('PUBLIC_KEY');
-        channelizeWidget.loadConversationWindow('otherMemberId', 'conversationId');
-    </script>
-</html>
+### Load Conversation Window By User-Id
+Load conversation window using `loadConversationWindowByUserId(userId)` method. It requires user-id as argument.
+
+```js
+    loadConversationWindowByUserId(userId)
 ```
 
 ## File Structure of Channelize Sample App
@@ -132,8 +133,10 @@ Load conversation window using `loadConversationWindow()` method. It requires tw
             |-- components  
                 |-- conversation-window.js    - conversation screen class
                 |-- login.js                  - login class
+                |-- members.js                - members class
                 |-- recent-conversation.js    - recent conversation class
                 |-- search.js                 - search class
+                |-- thread.js                 - thread screen class
             |-- adapter.js                    - Channelize JS SDK functions
             |-- constants.js                  - const variables
             |-- utility.js                    - utility functions

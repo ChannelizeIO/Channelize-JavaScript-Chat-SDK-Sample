@@ -73,6 +73,13 @@ class Utility {
             snackbar.remove();
         }, 3000);
     }
+
+    formatDuration(duration) {
+        let updatedDuration, actualDuration;
+        actualDuration = duration / 1000;
+        updatedDuration = ((Math.floor(actualDuration / 60) + (actualDuration % 60) / 100).toFixed(2)).toString().replace('.',':');
+        return updatedDuration;
+    }
 }
 
 export { Utility as default };

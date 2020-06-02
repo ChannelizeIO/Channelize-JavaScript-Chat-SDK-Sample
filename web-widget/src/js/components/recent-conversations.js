@@ -2,7 +2,7 @@ import Utility from "../utility.js";
 import ConversationWindow from "./conversation-window.js";
 import Search from "./search.js";
 import Login from "./login.js";
-import { LANGUAGE_PHRASES, IMAGES } from "../constants.js";
+import { LANGUAGE_PHRASES, IMAGES, SETTINGS } from "../constants.js";
 
 class RecentConversations {
 
@@ -240,9 +240,9 @@ class RecentConversations {
 			conversation.lastMessageIcon = null;
 			conversation.lastMessageBody = "<i>" + LANGUAGE_PHRASES.MESSAGE_DELETED;
 		}
-		else if(message.type != "normal") {
+		else if(message.type == "admin") {
 			conversation.lastMessageIcon = null;
-			conversation.lastMessageBody = this._modifyMessageBody(message);
+			conversation.lastMessageBody = this._handleMetaMessage(message);
 		}
 		else if(message.attachments && message.attachments.length) {
 
@@ -308,7 +308,6 @@ class RecentConversations {
 	deleteLastMessage(data, updatedLastMsg) {
 		let targetLastMsg = document.getElementById("ch_msg_" + data.messages[0].id);
 		if(!updatedLastMsg) {
-			targetLastMsg.innerHTML = "";
 			return;
 		}
 
@@ -375,7 +374,9 @@ class RecentConversations {
 	}
 
 	updateNewMessage(message, newConversation = null) {
-		if(!message) {
+		/* Only add a new message on the recent-screen if thread messaging is disabled and
+		 new message showInConversation is true. */
+		if(!message || (SETTINGS.ALLOW_MESSAGE_THREADING && !message.showInConversation)) {
 			return;
 		}
 
@@ -398,7 +399,7 @@ class RecentConversations {
 		}
 	}
 
-	_modifyMessageBody(message) {
+	_handleMetaMessage(message) {
 		if(!message)
 			return;
 
@@ -605,6 +606,33 @@ class RecentConversations {
 			}
 		});
 	}
+
+	updateDeleteForEveryoneMsg(data) {
+		let recentTargetMsg = document.getElementById("ch_msg_" + data.messages[0].id);
+		if(recentTargetMsg) {
+			// Remove if media/location/sticker/gif icon present
+			if(recentTargetMsg.parentNode.firstChild.nodeName != "DIV") {
+				recentTargetMsg.parentNode.firstChild.remove();
+			}
+			recentTargetMsg.innerHTML = "<i>" + LANGUAGE_PHRASES.MESSAGE_DELETED;
+		}
+	}
+
+	handleClearConversation(conversation) {
+  		let targetConversation = document.getElementById(conversation.id);
+
+  		if(targetConversation && targetConversation.lastChild) {
+			targetConversation.lastChild.remove();
+		}
+  	}
+
+	handleDeleteConversation(conversation) {
+		let targetConversation = document.getElementById(conversation.id);
+
+  		if(targetConversation && targetConversation.lastChild) {
+			targetConversation.remove();
+		}
+  	}
 
 	handleBlock(data) {
 		this.conversations.forEach(conversation => {

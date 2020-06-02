@@ -6,48 +6,58 @@ $ch-body-font-size: 13px;
 /*Colors variables*/
 // Theme color
 $theme-color: #0377ff;
+
 // Gray
-$gray: #969391;
+$gray-color: #969391;
+
 // Dark gray
 $dark-gray: #545454;
+
 // Light gray
 $light-gray: #3a3c4c;
+
 //space gray
 $space-gray: #999999;
+
 //Gray shade
 $gray-shade: #4a505a;
+
 // White color
 $white-color: #ffffff;
+
 // Off white
 $off-white: #fafafa;
+
 // light white
 $light-white: #f5f5f5;
-//Black
-$black: #000000;
 
+//Black
+$black-color: #000000;
+
+// Red
+$red-color: #ff0000;
 
 /*Apps colors and font sizes*/
 $ch-title-color: $dark-gray;
 $ch-title-fontsize: 14px;
 
-$ch-subtitle-color: $light-gray;
+$ch-subtitle-color: $space-gray;
 $ch-subtitle-fontsize: 12px;
 
 $ch-app-icon-color: $gray-shade;
 $ch-app-icon-fontsize: 20px;
 
-$ch-status-color: $gray;
+$ch-status-color: $gray-color;
 $ch-status-fontsize: 10px;
 
 /*Recent screen*/
 $ch-recent-conversation-header-bg-color: $white-color;
 $ch-recent-conversation-header-font-icon-color: $space-gray;
-$ch-recent-conversation-header-font-icon-hover-color: $black;
+$ch-recent-conversation-header-font-icon-hover-color: $black-color;
 $ch-recent-conversation-list-color: $white-color;
 $ch-recent-conversation-list-hover-color: $off-white;
 $ch-recent-conversation-list-title-color: $gray-shade;
 $ch-recent-conversation-list-content-color: $light-gray;
-
 $ch-recent-bg: $white-color;
 $ch-recent-width: 22%;
 
@@ -56,22 +66,17 @@ $ch-appheader-bg: $white-color;
 
 /*Conversation screen*/
 $ch-conversation-window-header-bg-color: $white-color;
-$ch-recent-conversation-header-font-icon-color: $space-gray;
-$ch-recent-conversation-header-font-icon-hover-color: $black;
-
+$ch-conversation-window-header-font-icon-color: $space-gray;
+$ch-conversation-window-header-font-icon-hover-color: $black-color;
 $ch-conversation-window-user-msg-bg-color: $theme-color;
 $ch-conversation-window-user-msg-color: $white-color;
-
 $ch-conversation-window-msg-bg-color: $light-white;
 $ch-conversation-window-msg-color: $dark-gray;
-
 $ch-conversation-window-composer-bg-color: $white-color;
 $ch-conversation-window-composer-text-color: $dark-gray;
 $ch-conversation-window-composer-font-icon-color: $theme-color;
-$ch-conversation-window-composer-font-icon-hover-color: $black;
-
+$ch-conversation-window-composer-font-icon-hover-color: $black-color;
 $ch-conversation-window-msg-owner-color: $dark-gray;
-
 $ch-conversation-window-bg-color: $white-color;
 $ch-conversation-width: 22%;
 

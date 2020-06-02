@@ -34,7 +34,7 @@ ul {
   top: 40%;
   border: 5px solid #f3f3f3;
   border-radius: 50%;
-  border-top: 5px solid #0377ff;
+  border-top: 5px solid $theme-color;
   width: 30px;
   height: 30px;
   -webkit-animation: spin 1s linear infinite; /* Safari */
@@ -111,7 +111,7 @@ ul {
   min-width: 250px;
   margin-left: -125px;
   background-color: #333;
-  color: #fff;
+  color: $white-color;
   text-align: center;
   border-radius: 4px;
   padding: 13px;
@@ -140,7 +140,7 @@ ul {
   to {bottom: 0; opacity: 0;}
 }
 /*screen window scroll*/
-.ch-messages-box, .ch-recent-listing, .ch-friends-box {
+.ch-messages-box, .ch-recent-listing, .ch-friends-box, .ch-thread-messages-box {
   &::-webkit-scrollbar {
     width: .4em;
     overflow: visible;
@@ -153,7 +153,7 @@ ul {
   }
 }
 /*screen window common style*/
-.ch-login-window, .ch-conv-window, .ch-search-window, .ch-recent-window, .ch-members-window {
+.ch-login-window, .ch-conv-window, .ch-search-window, .ch-recent-window, .ch-members-window, .ch-thread-window {
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
   position: fixed;
@@ -167,7 +167,7 @@ ul {
   top: 35%;
   bottom: 0;
   width: $ch-recent-width;
-  background-color: #fff;
+  background-color: $white-color;
   .ch-header {
     color : $gray-shade;
     line-height: 34px;
@@ -177,7 +177,7 @@ ul {
       float: right;
       margin-top: 5px;
       &:hover {
-        color: $black;
+        color: $black-color;
       }
     }
   }
@@ -203,13 +203,13 @@ ul {
     }
   }
   .ch-login-btn {
-    background: #0377ff;
+    background: $theme-color;
     outline: none;
     margin: 0 auto;
     display: inherit;
-    border: 1px solid #0377ff;
+    border: 1px solid $theme-color;
     border-radius: 25px;
-    color: #fff;
+    color: $white-color;
     padding: 10px 30px;
     font-size: 14px;
     text-transform: uppercase;
@@ -220,7 +220,7 @@ ul {
     cursor: pointer;
     &:hover {
       background: transparent;
-      color: #0377ff;
+      color: $theme-color;
     }
   }
   .ch-login-name-container {
@@ -231,7 +231,7 @@ ul {
     .ch-login-error {
       display: none;
       font-size: 85%;
-      color: red;
+      color: $red-color;
       margin-top: 2px;
     }
     input {
@@ -318,7 +318,7 @@ ul {
           .ch-online-icon {
             background: #64ba00;
             border-radius: 50%;
-            border: 2px solid #fff;
+            border: 2px solid $white-color;
             bottom: 0;
             position: absolute;
             right: 1px;
@@ -327,7 +327,7 @@ ul {
             display: none;
           }
           .ch-user-blocked { 
-            background: red !important; 
+            background: $red-color !important; 
             display: block !important;  
           }
         }
@@ -393,7 +393,7 @@ ul {
   top: $ch-recent-top-position;
   bottom: $ch-recent-bottom-position;
   width: $ch-recent-width;
-  background-color: #fff;
+  background-color: $white-color;
   .ch-header {
     line-height: 35px;
     text-align: center;
@@ -415,13 +415,13 @@ ul {
       background: transparent;
       outline: none;
       border: none;
-      color: white;
+      color: $white-color;
       width: 100%;
       padding: 15px 25px 15px 15px;
       box-sizing: border-box;
     }
     ::placeholder {
-      color: white;
+      color: $white-color;
       opacity: 1;
     }
     :-ms-input-placeholder {
@@ -431,7 +431,7 @@ ul {
      color: white;
     }
     .ch-clear-search-icon {
-      color: #ffffff;
+      color: $white-color;
       cursor: pointer;
       font-size: 20px;
       position: absolute;
@@ -464,20 +464,20 @@ ul {
         font-size: 13px;
         display: inline-block;
         vertical-align: middle;
-        color: #4a505a;
+        color: $gray-shade;
         font-weight: 400;
         text-transform: capitalize;
       }
     }
     .ch-more-users {
       display: none;
-      color: #4a505a;
+      color: $gray-shade;
       margin-left: 10px;
       margin-top: 10px;
       font-size: 13px;
     }
     .ch-suggested {
-      color: #4a505a;
+      color: $gray-shade;
       margin-left: 10px;
       margin-top: 10px;
       font-size: 13px;
@@ -515,7 +515,7 @@ ul {
       }
       .ch-conv-status {
         font-size: $ch-status-fontsize;
-        color: $ch-recent-conversation-header-font-icon-color;
+        color: $ch-status-color;
       }
     }
     .ch-conv-drop-down {
@@ -523,12 +523,12 @@ ul {
       display: none;
       box-shadow: 0 5px 5px -3px rgba(0,0,0,.2), 0 8px 10px 1px rgba(0,0,0,.14), 0 3px 14px 2px rgba(0,0,0,.12);
       z-index: 8;
-      background: #fff;
+      background: $white-color;
       min-width: 100px;
       max-width: 250px;
       border-radius: 5px;
       div {
-        color: #4a505a;
+        color: $gray-shade;
         padding: 4px 12px;
         height: auto;
         margin: 0;
@@ -541,12 +541,12 @@ ul {
       }
     }
     i#ch_conv_close_btn {
-      color: $ch-recent-conversation-header-font-icon-color;
+      color: $ch-conversation-window-header-font-icon-color;
       position: absolute;
-      right: 10px;      
+      right: 10px;
       top: 14px;
       &:hover {
-        color: $ch-recent-conversation-header-font-icon-hover-color;
+        color: $ch-conversation-window-header-font-icon-hover-color;
       }
     }
   }
@@ -556,7 +556,7 @@ ul {
     background-color: $ch-conversation-window-bg-color;
     padding-top: 5px;
     .ch-loader-bg {
-      background: #fff;
+      background: $white-color;
     }
     .ch-msg-loader {
       float: right;
@@ -572,7 +572,7 @@ ul {
     }
     .ch-admin-msg {
       text-align: center;
-      color: #969391;
+      color: $gray-color;
       margin-bottom: 4px;
       padding: 0 10px;
       font-size: 11px;
@@ -589,13 +589,15 @@ ul {
         overflow: hidden;
         audio#ch_audio_message {
           margin-top: -10px;
-          width: 295px;
-          height: 38px;
-          margin-left: -33px;
-          margin-right: -33px;
-          margin-bottom: -14px;
-          background-color: #f1f3f4;
+          width: 244px;
+          height: 45px;
+          margin-left: -23px;
+          margin-right: -23px;
+          margin-bottom: -13px;
+          background-color: #f5f5f5;
           transform: scaleX(0.9);
+          display: inline-block;
+          box-sizing: border-box;
         }
       }
       i.ch-msg-more-option {
@@ -608,12 +610,12 @@ ul {
         position: absolute;
         box-shadow: rgba(0,0,0,0.3) 0 0 1.2em;
         z-index: 8;
-        background: #fff;
+        background: $white-color;
         min-width: 100px;
         max-width: 250px;
         border-radius: 4px;
         div {
-          color: #4a505a;
+          color: $gray-shade;
           padding: 4px 12px;
           height: auto;
           margin: 0;
@@ -636,11 +638,33 @@ ul {
         float: left;
         max-width: 220px;
         margin-left: 8px;
+        div.ch-msg-reply-count-container {
+          display: none;
+        }
+        div.ch-msg-reply-count-container.show {
+          display: block;          
+        }
+        span.ch-msg-reply-count {
+          font-size: 12px;
+          display: inline-block;
+          vertical-align: middle;
+          color: $theme-color;
+          margin-top: 3px;
+          cursor: pointer;
+          margin-right: 2px;
+        }
+        i.ch-msg-reply-count-icon {
+          font-size: 12px;
+          display: inline-block;
+          vertical-align: middle;
+          color: $gray-color;
+          margin-top: 3px;
+        }
         span.ch-msg-time {
           font-size: 10px;
           display: inline-block;
           vertical-align: middle;
-          color: #969391;
+          color: $gray-color;
         }
         .ch-message {
           overflow: hidden;
@@ -650,6 +674,87 @@ ul {
           color: $ch-conversation-window-msg-color;
           padding: 10px;
           word-break: break-word;
+          margin-bottom: 2px;
+          .ch-text-message-reply-thread {
+            margin: 0px;
+            border-left: 3px solid $dark-gray;
+            padding-left: 7px;
+            display: inline-block;
+            margin-bottom: 10px;
+            font-style: italic;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            width: 175px;
+            cursor: pointer;
+          }
+          .ch-attachments-message-reply-thread {
+            margin: 0px;
+            border-left: 3px solid $dark-gray;
+            padding-left: 7px;
+            display: inline-block;
+            margin-bottom: 10px;
+            font-style: italic;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            width: 175px;
+            cursor: pointer;
+          }
+          .ch-reply-msg-container {
+            border-left: 3px solid $dark-gray;
+            padding-left: 10px;
+            display: inline-block;
+            margin-bottom: 10px;
+            min-width: 100px;
+            position: relative;
+            cursor: pointer;
+          }
+          .ch-reply-msg-container-attachment {
+            border-left: 3px solid $dark-gray;
+            padding-left: 10px;
+            display: inline-block;
+            margin-bottom: 10px;
+            min-width: 180px;
+            position: relative;
+            cursor: pointer;
+          }
+          .ch-parent-msg-owner-name {
+            font-weight: 700;
+            margin: 3px 0px;
+            color: $ch-conversation-window-msg-color;
+          }
+          .ch-parent-msg-icon, .ch-parent-msg-duration, .ch-parent-msg-body {
+            margin: 4px 0px;
+            color: $ch-conversation-window-msg-color;
+            display: block;
+            margin-right: 3px;
+            float: left;
+          }
+          .ch-parent-msg-body {
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            width: 175px;
+          }
+          .ch-parent-msg-icon {
+            font-size: 15px;
+          }
+          .ch-message-body {
+            margin: 0px;
+          }
+          .ch-reply-msg-container-right {
+            position: absolute;
+            top: 0;
+            right: 0;
+          }
+          .ch-parent-msg-thumbnail {
+            height: 40px;
+            width: 40px;
+            background: $ch-conversation-window-header-bg-color;
+            overflow: hidden;
+            border-radius: 2px;
+          }
           .ch-video-message, .ch-image-message, .ch-location-message, .ch-sticker-message {
             background-size: cover;
             position: relative;
@@ -667,7 +772,7 @@ ul {
               right: 0;
               top: 28%;
               text-align: center;
-              color: #fff;
+              color: $white-color;
               font-size: 55px;
           }
         }
@@ -680,22 +785,44 @@ ul {
       .ch-msg-container.right {
         float: right;
         max-width: 220px;
-        color: #969391;
+        color: $gray-color;
         margin-right: 8px;
         text-align: right;
-        .ch-msg-time {
-          margin-right: 5px;
+        div.ch-msg-reply-count-container {
+          display: none;
+        }
+        div.ch-msg-reply-count-container.show {
+          display: block;
+        }
+        span.ch-msg-reply-count {
+          font-size: 12px;
+          display: inline-block;
+          vertical-align: middle;
+          color: $theme-color;
+          margin-top: 3px;
+          cursor: pointer;
+          margin-right: 2px;
+        }
+        i.ch-msg-reply-count-icon {
+          font-size: 12px;
+          display: inline-block;
+          vertical-align: middle;
+          color: $gray-color;
+          margin-top: 3px;
+          float: right;
+        }
+        span.ch-msg-time {
+          margin-right: 3px;
           font-size: 10px;
           display: inline-block;
           vertical-align: middle;
-          color: #969391;
+          color: $gray-color;
         }
         i.ch-msg-status {
           font-size: 10px;
           display: inline-block;
           vertical-align: middle;
-          color: #969391;
-          margin-right: 5px;
+          color: $gray-color;
         }
         .ch-message {
           background-color: $ch-conversation-window-user-msg-bg-color;
@@ -707,6 +834,86 @@ ul {
           text-align: left;
           padding: 10px;
           word-break: break-word;
+          .ch-text-message-reply-thread {
+            margin: 0px;
+            border-left: 3px solid $white-color;
+            padding-left: 7px;
+            display: inline-block;
+            margin-bottom: 10px;
+            font-style: italic;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            width: 175px;
+            cursor: pointer;
+          }
+          .ch-attachments-message-reply-thread {
+            margin: 0px;
+            border-left: 3px solid $white-color;
+            padding-left: 7px;
+            display: inline-block;
+            margin-bottom: 10px;
+            font-style: italic;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            width: 175px;
+            cursor: pointer;
+          }
+          .ch-reply-msg-container {
+            border-left: 3px solid $white-color;
+            padding-left: 10px;
+            display: inline-block;
+            margin-bottom: 10px;
+            min-width: 100px;
+            position: relative;
+            cursor: pointer;
+          }
+          .ch-reply-msg-container-attachment {
+            border-left: 3px solid $white-color;
+            padding-left: 10px;
+            display: inline-block;
+            margin-bottom: 10px;
+            min-width: 180px;
+            position: relative;
+            cursor: pointer;
+          }
+          .ch-parent-msg-owner-name {
+            font-weight: 700;
+            margin: 3px 0px;
+            color: $ch-conversation-window-user-msg-color;
+          }
+          .ch-parent-msg-icon, .ch-parent-msg-duration, .ch-parent-msg-body {
+            margin: 4px 0px;
+            color: $ch-conversation-window-user-msg-color;
+            display: block;
+            margin-right: 3px;
+            float: left;
+          }
+          .ch-parent-msg-body {
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            width: 175px;
+          }
+          .ch-parent-msg-icon {
+            font-size: 15px;
+          }
+          .ch-message-body {
+            margin: 0px;
+          }
+          .ch-reply-msg-container-right {
+            position: absolute;
+            top: 0;
+            right: 0;
+          }
+          .ch-parent-msg-thumbnail {
+            height: 40px;
+            width: 40px;
+            background: $ch-conversation-window-user-msg-bg-color;
+            overflow: hidden;
+            border-radius: 2px;
+          }
         }
         .ch-video-message, .ch-image-message, .ch-location-message, .ch-sticker-message {
           background-size: cover;
@@ -725,7 +932,7 @@ ul {
             right: 0;
             top: 28%;
             text-align: center;
-            color: #fff;
+            color: $white-color;
             font-size: 55px;
         }
       }
@@ -780,7 +987,7 @@ ul {
       bottom: -100px;
       left: 0;
       right: 0;
-      background: #fff;
+      background: $white-color;
       padding: 10px;
       z-index: 99;
       transition: .5s;
@@ -837,6 +1044,74 @@ ul {
       bottom: 100%;
       visibility: visible;
     }
+
+    .ch-reply-container {
+      position: absolute;
+      opacity: 0;
+      visibility: hidden;
+      bottom: -100px;
+      left: 0;
+      right: 0;
+      background: $white-color;
+      padding: 10px;
+      z-index: 99;
+      transition: .5s;
+      -webkit-box-shadow: 0 -4px 8px 0 rgba(0,0,0,0.2);
+      -webkit-transition: .5s;
+      box-shadow: 0 -4px 8px 0 rgba(0,0,0,0.2);
+      overflow: hidden;
+      .ch-reply-composer {
+        border-left: 3px solid $theme-color;
+        padding-left: 10px;
+        display: inline-flex;
+      }
+      .ch-reply-composer-left {
+        float: left;
+        display: inline-block;
+      }
+      .ch-reply-message-thumbnail {
+        width: 40px;
+        height: 40px;
+        margin-right: 13px;
+      }
+      .ch-reply-composer-right {
+        float: left;
+        display: inline-block;
+      }
+      .ch-reply-msg-owner-name {
+        font-weight: 700;
+        margin: 3px 0px;
+        color: $dark-gray;
+      }
+      .ch-reply-msg-icon, .ch-reply-msg-duration, .ch-reply-msg-body {
+        margin: 4px 0px;
+        color: $light-gray;
+        display: block;
+        margin-right: 3px;
+        float: left;
+      }
+      .ch-reply-msg-icon {
+        font-size: 15px;
+      }
+      i {
+        cursor: pointer;
+        font-size: 18px;
+      }
+      i#ch_reply_composer_close_btn {
+        color: $dark-gray;
+        position: absolute;
+        right: 5px;
+        top: 5px;
+        &:hover {
+          color: $black-color;
+        }
+      }
+    }
+    .ch-show-reply-container.ch-reply-container {
+      opacity: 1;
+      bottom: 100%;
+      visibility: visible;
+    }
   }
   .ch-footer {
     .ch-conv-join {
@@ -854,11 +1129,11 @@ ul {
 /*Members style start here*/
 
 .ch-members-window {
-  right: 24%;
-  top: 35%;
-  bottom: 0;
-  width: 22%;
-  background-color: #fff;
+  bottom: $ch-conv-bottom-position;
+  top: $ch-conv-top-position;
+  right: $ch-conv-right-position;
+  width: $ch-conversation-width;
+  background-color: $white-color;
   box-shadow: rgba(0,0,0,.3) 0 0 1.2em;
   .ch-header {
     line-height: 35px;
@@ -868,9 +1143,9 @@ ul {
       position: absolute;
       left: 10px;      
       top: 17px;
-      color: $ch-recent-conversation-header-font-icon-color;
+      color: $ch-conversation-window-header-font-icon-color;
       &:hover {
-        color: $ch-recent-conversation-header-font-icon-hover-color;
+        color: $ch-conversation-window-header-font-icon-hover-color;
       }
     }    
   }
@@ -895,7 +1170,7 @@ ul {
         .ch-online-icon {
           background: #64ba00;
           border-radius: 50%;
-          border: 2px solid #fff;
+          border: 2px solid $white-color;
           bottom: 0;
           position: absolute;
           right: 1px;
@@ -923,3 +1198,561 @@ ul {
 }
 
 /*Members style end here*/
+
+
+/*Threas style start here*/
+.ch-send-direct-msg-box {
+  margin: 10px 0 10px 6px;
+}
+.ch-thread-window {
+  bottom: $ch-conv-bottom-position;
+  top: $ch-conv-top-position;
+  right: $ch-conv-right-position;
+  width: $ch-conversation-width;
+  box-shadow: rgba(0,0,0,.3) 0 0 1.2em;
+  background-color: $ch-conversation-window-bg-color;
+  .ch-header {
+    color: $ch-title-color;
+    i#ch_thread_close_btn {
+      color: $ch-conversation-window-header-font-icon-color;
+      vertical-align: middle;
+      &:hover {
+        color: $ch-conversation-window-header-font-icon-hover-color;
+      }
+    }
+    .ch-thread-header-details-wrapper {
+      margin-left: 10px;
+      display: inline-block;
+      vertical-align: middle;
+      .ch-header-title {
+        display: inline-block;
+        vertical-align: middle;
+        max-width: 120px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        color: $ch-title-color;
+        text-transform: capitalize;
+        font-size: $ch-title-fontsize;
+        cursor: pointer;
+      }
+      .ch-header-subtitle {
+        color: $ch-subtitle-color;
+        font-size: $ch-subtitle-fontsize;
+        .ch-header-reply {
+          margin-left: 4px;
+        }
+      }
+    }
+  }
+  .ch-thread-messages-box {
+    height: calc(100% - 145px);
+    overflow: auto;
+    background-color: $ch-conversation-window-bg-color;
+    padding-top: 5px;
+    .ch-msg-loader {
+      float: right;
+      padding: 5px 0;
+      background-size: 70px;
+      position: relative;
+      background-position: center;
+      background-repeat: no-repeat;
+      height: 140px;
+      min-width: 180px;
+      border: 1px solid #eee;
+      border-radius: 6px 6px 0;
+    }
+    .ch-loader-bg {
+      background: $white-color;
+    }
+    .ch-thread-start {
+      color: $ch-subtitle-color;
+      text-align: center;
+    }
+    .ch-thread-start:before {
+      content: "";
+      border: .5px solid;
+      width: 26%;
+      position: absolute;
+      right: 3px;
+      top: 11px;
+    }
+    .ch-thread-start:after {
+      content: "";
+      border: .5px solid;
+      width: 26%;
+      position: absolute;
+      left: 3px;
+      top: 11px;
+    }
+    .ch-msg-list {
+      position: relative;
+      float: left;
+      width: 100%;
+      padding: 5px 0;
+      .ch-msg-container {
+        clear: both;
+        margin-bottom: 0;
+        position: relative;
+        overflow: hidden;
+        audio#ch_audio_message {
+          margin-top: -10px;
+          width: 240px;
+          height: 45px;
+          margin-left: -22px;
+          margin-right: -22px;
+          margin-bottom: -14px;
+          background-color: #f5f5f5;
+          transform: scaleX(0.9);
+          border-radius: 0;
+        }
+      }
+      i.ch-msg-more-option {
+        color: #6e7174;
+        font-size: 15px;
+        margin-top: 2px;
+        cursor: pointer;
+      }
+      .ch-msg-option-container {
+        position: absolute;
+        box-shadow: rgba(0,0,0,0.3) 0 0 1.2em;
+        z-index: 8;
+        background: $white-color;
+        min-width: 100px;
+        max-width: 250px;
+        border-radius: 4px;
+        div {
+          color: $gray-shade;
+          padding: 4px 12px;
+          height: auto;
+          margin: 0;
+          line-height: 20px;
+          font-size: 12px;
+          &:hover {
+            background: #0000000a;
+            cursor: pointer;
+          }
+        }
+      }
+      .ch-sender-name {
+        font-size: 13px;
+        margin-left: 7px;
+        margin-bottom: 5px;
+        text-transform: capitalize;
+        color: $ch-conversation-window-msg-owner-color;
+      }
+      .ch-msg-container.left {
+        float: left;
+        max-width: 220px;
+        margin-left: 8px;
+        span.ch-msg-time {
+          font-size: 10px;
+          display: inline-block;
+          vertical-align: middle;
+          color: $gray-color;
+        }
+        .ch-message {
+          overflow: hidden;
+          background: $ch-conversation-window-msg-bg-color;
+          border-radius: 6px 6px 6px 0;
+          position: relative;
+          color: $ch-conversation-window-msg-color;
+          padding: 10px;
+          word-break: break-word;
+          margin-bottom: 10px;
+          .ch-text-message-sent-conversation {
+            margin: 0px;
+            border-left: 3px solid $dark-gray;
+            padding-left: 7px;
+            display: inline-block;
+            margin-bottom: 10px;
+            font-style: italic;
+          }
+          .ch-attachments-message-sent-conversation {
+            margin: 0px;
+            border-left: 3px solid $dark-gray;
+            padding-left: 7px;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-style: italic;
+          }
+          .ch-message-body {
+            margin: 0px;
+          }
+          .ch-video-message, .ch-image-message, .ch-location-message, .ch-sticker-message {
+            background-size: cover;
+            position: relative;
+            cursor: pointer;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 140px;
+            min-width: 180px;
+            margin: -10px;
+            border: 1px solid #eee;
+            border-radius: 6px 6px 6px 0;
+            .ch-play-icon {
+              position: absolute;
+              left: 0;
+              right: 0;
+              top: 28%;
+              text-align: center;
+              color: $white-color;
+              font-size: 55px;
+            }
+          }
+          .ch-audio-message {
+            width: 220px;
+            margin: -10px;
+          }
+        }
+      }
+      .ch-msg-container.right {
+        float: right;
+        max-width: 220px;
+        color: $gray-color;
+        margin-right: 8px;
+        text-align: right;
+        span.ch-msg-time {
+          margin-right: 3px;
+          font-size: 10px;
+          display: inline-block;
+          vertical-align: middle;
+          color: $gray-color;
+        }
+        i.ch-msg-status {
+          font-size: 10px;
+          display: inline-block;
+          vertical-align: middle;
+          color: $gray-color;
+        }
+        .ch-message {
+          background-color: $ch-conversation-window-user-msg-bg-color;
+          border-radius: 6px 6px 0;
+          overflow: hidden;
+          display: block;
+          color: $ch-conversation-window-user-msg-color;
+          margin-bottom: 1px;
+          text-align: left;
+          padding: 10px;
+          word-break: break-word;
+          .ch-text-message-sent-conversation {
+            margin: 0px;
+            border-left: 3px solid $white-color;
+            padding-left: 7px;
+            display: inline-block;
+            margin-bottom: 10px;
+            font-style: italic;
+          }
+          .ch-attachments-message-sent-conversation {
+            margin: 0px;
+            border-left: 3px solid $white-color;
+            padding-left: 7px;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-style: italic;
+          }
+          .ch-message-body {
+            margin: 0px;
+          }
+          .ch-video-message, .ch-image-message, .ch-location-message, .ch-sticker-message {
+            background-size: cover;
+            position: relative;
+            cursor: pointer;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 140px;
+            min-width: 180px;
+            margin: -10px;
+            border: 1px solid #eee;
+            border-radius: 6px 6px 6px 0;
+            .ch-play-icon {
+              position: absolute;
+              left: 0;
+              right: 0;
+              top: 28%;
+              text-align: center;
+              color: $white-color;
+              font-size: 55px;
+            }
+          }
+          .ch-audio-message {
+            width: 220px;
+            margin: -10px;
+          }
+        }
+      }
+    }
+  }
+  .ch-send-direct-msg-label {
+    color: $gray-color;
+    display: inline-block;
+    white-space: nowrap;
+    margin-left: 3px;
+  }
+  .ch-send-direct-msg-checkbox {
+    vertical-align: middle;
+  }
+  .ch-thread-send-box {
+    padding: 8px 10px 0;
+    border-top: 1px solid rgba(90,122,190,.08);
+    min-height: 50px;
+    background: $ch-conversation-window-composer-bg-color;
+    font-size: 13px;
+    position: relative;
+    textarea {
+      outline: none;
+      border: none;
+      width: calc(100% - 54px);
+      color: $ch-conversation-window-composer-text-color;
+      padding: 0px 5px 0 0;
+      resize: none;
+      font-size: 13px;
+      vertical-align: bottom;
+      font-family: $ch-body-font-family;
+      background: transparent;
+    }
+    button {
+      padding: 11px 0 0 0;
+      margin: 0;
+      background: transparent;
+      border: none;
+      outline: none;
+      vertical-align: super;
+      cursor: pointer;
+      i.ch-thread-send-icon {
+        font-size: $ch-app-icon-fontsize;
+        color: $ch-conversation-window-composer-font-icon-color;
+      }
+    }
+    .ch-thread-attachment-btn {
+      margin-right: 5px;
+      display: inline-block;
+      vertical-align: super;
+      font-size: 22px;
+      cursor: pointer;
+      color: $ch-conversation-window-composer-font-icon-color;
+    }
+    .ch-thread-media-docker {
+      position: absolute;
+      opacity: 0;
+      visibility: hidden;
+      bottom: -100px;
+      left: 0;
+      right: 0;
+      background: $white-color;
+      padding: 10px;
+      z-index: 99;
+      transition: .5s;
+      -webkit-box-shadow: 0 -4px 8px 0 rgba(0,0,0,0.2);
+      -webkit-transition: .5s;
+      box-shadow: 0 -4px 8px 0 rgba(0,0,0,0.2);
+      border-radius: 10px 10px 0 0;
+      overflow: hidden;
+      text-align: center;
+      .ch-thread-video-option {
+        margin-right: 0 !important;
+      }
+      .ch-thread-image-option, .ch-thread-audio-option, .ch-thread-video-option {
+        display: inline-block;
+        position: relative;
+        text-align: center;
+        margin-right: 35px;
+        color: $dark-gray;
+        .ch-thread-image-icon-span{
+          background-color: #64b5f6;
+        }
+        .ch-thread-audio-icon-span{
+          background-color: #ff8a65;
+        }
+        .ch-thread-video-icon-span{
+          background-color: #f7dc6f;
+        }
+        .ch-thread-image-icon-span, .ch-thread-audio-icon-span, .ch-thread-video-icon-span {
+          height: 45px;
+          width: 45px;
+          display: block;
+          text-align: center;
+          line-height: 53px;
+          border-radius: 50%;
+          margin-bottom: 2px;
+          cursor: pointer;
+          img {
+            width: 16px;
+          }
+        }
+        input {
+          opacity: 0;
+          width: 50px;
+          height: 50px;
+          position: absolute;
+          top: 0;
+          cursor: pointer;
+          left: 0;
+        }
+      }
+    }
+    .ch-thread-show-docker.ch-thread-media-docker {
+      opacity: 1;
+      bottom: 100%;
+      visibility: visible;
+    }
+  }
+
+}
+.ch-conv-window .ch-messages-box .ch-msg-list .ch-msg-container .ch-message.reaction-space {
+  padding-bottom: 35px;
+  overflow: inherit;
+  margin-bottom: 25px;
+}
+.ch-conv-window .ch-messages-box .ch-msg-list .ch-msg-container {
+  overflow: initial;
+}
+.ch-msg-reaction {
+  display: inline-block;
+  top: 0;
+  margin-bottom: 0;
+}
+
+/*Thread style end here*/
+
+/*Message Reaction style start here*/
+.ch-msg-list {
+  i.ch-add-reaction-option {
+    color: $gray-color;
+    font-size: 16px;
+    margin: 2px 0px 0px 2px;
+    cursor: pointer;
+  }
+  i.ch-add-reaction-option:hover {
+    color: $dark-gray;
+  }
+  .ch-scroll-menu-container {
+    position: absolute;
+    box-shadow: rgba(0,0,0,0.3) 0 0 1.2em;
+    z-index: 8;
+    background: $white-color;
+    min-width: 100px;
+    max-width: 100%;
+    border-radius: 4px;
+    left: 15px;
+    .ch-scroll-menu {
+      list-style: none;
+      margin: 0;
+      position: relative;
+      white-space: nowrap;
+      display: inline-block;
+      overflow: hidden;
+    }
+    .ch-reaction-listing {
+      padding: 0;
+      margin: 0;
+      display: -webkit-box;
+      display: -ms-flexbox;
+      display: flex;
+      height: 100%;
+    }
+    .ch-reaction-menu-list {
+      width: 50px;
+      height: 100%;
+      display: -webkit-box;
+      display: -ms-flexbox;
+      display: flex;
+      padding: 0;
+      position: relative;
+      list-style: none;
+      line-height: 54px;
+    }
+    .ch-reaction-menu-list-item {
+      position: relative;
+      -webkit-transition: .4s;
+      transition: .4s;
+      display: inline-block;
+      font-size: 22px;
+      width: 50px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .ch-reaction-menu-list-item:hover {
+      transform: scale(1.3);
+    }
+    .ch-reaction-menu-list.reaction-selected:after {
+      content: "";
+      display: inline-block;
+      height: 5px;
+      width: 5px;
+      background-color: #2175f5;
+      position: absolute;
+      bottom: 6px;
+      left: 42%;
+      border-radius: 25px;
+    }
+    .ch-scroll-menu-arrow {
+      display: inline-block;
+      line-height: 54px;
+      -webkit-transition: .4s;
+      transition: .4s;
+      position: relative;
+      width: 25px;
+      color: $gray-color;
+      cursor: pointer;
+      float:left;
+    }
+    .ch-scroll-menu-arrow:hover {
+      color: $dark-gray;
+    }
+
+    .ch-scroll-menu-arrow-right {
+      float: right;
+    }
+  }
+
+}
+
+.ch-msg-reaction-container {
+  position: relative;
+  max-width: 205px;
+  text-align: left;
+  margin-bottom: -60px;
+  bottom: 0px;
+  margin-top: 0px;
+  min-height: 35px;
+}
+.left .ch-msg-reaction-container {
+  padding-left: 5px;
+}
+.ch-msg-reaction-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+.ch-msg-reaction-item {
+  padding: 5px;
+  margin: 2px;
+  display: inline-block;
+  background: #fff;
+  -webkit-box-shadow: rgba(0,0,0,.2) 0 1px 3px 0;
+  box-shadow: rgba(0,0,0,.2) 0 1px 3px 0;
+  max-height: 30px;
+  text-align: center;
+}
+.ch-msg-reaction-name {
+  font-size: 18px;
+  vertical-align: middle;
+  display: inline-block;
+  line-height: inherit;
+}
+.ch-msg-reaction-count {
+  font-size: 12px;
+  color: #000!important;
+  vertical-align: middle;
+  padding: 0px 4px;
+}
+.ch-thread-window .ch-thread-messages-box .ch-msg-list .ch-msg-container .ch-message.reaction-space {
+  padding-bottom: 35px;
+  overflow: inherit;
+  margin-bottom: 25px;
+}
+.ch-thread-window .ch-thread-messages-box .ch-msg-list .ch-msg-container {
+  overflow: initial;
+}
+/*Message Reaction style end here*/

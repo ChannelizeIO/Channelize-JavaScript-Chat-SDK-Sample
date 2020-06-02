@@ -3,6 +3,7 @@ import ChannelizeAdapter from "./adapter.js";
 import Utility from "./utility.js";
 import Login from "./components/login.js";
 import Members from "./components/members.js";
+import Thread from "./components/thread.js";
 import RecentConversations from "./components/recent-conversations.js";
 import ConversationWindow from "./components/conversation-window.js";
 import { LANGUAGE_PHRASES, IMAGES } from "./constants.js";
@@ -22,6 +23,7 @@ class ChannelizeWidget {
 		// Initialize Channelize Adapter
 		this.chAdapter = new ChannelizeAdapter(publicKey);
 		this.convWindows = [];
+		this.threads = [];
 	}
 
 	// Load channelize
@@ -29,7 +31,7 @@ class ChannelizeWidget {
 		// Check for already login user
 		let userId = this.getCookie("ch_user_id");
 		let accessToken = this.getCookie("ch_access_token");
-
+		
 		if(userId && accessToken) {
 			this.connect(userId, accessToken, (err, res) => {
 				if(err) return console.error(err);
@@ -113,6 +115,8 @@ class ChannelizeWidget {
 		// Handle new message
 		window.channelize.chsocket.on('user.message_created', (data) => {
 
+			// I have to handle showInConversation value here. If updateNewMessage is true or threads is
+			// Is not enabled then show the message in conversation window.
 			// Get conversation is does not exist
 			if(!document.getElementById(data.message.conversationId)) {
 				this.chAdapter.getConversation(data.message.conversationId, (err, conversation) => {
@@ -136,13 +140,18 @@ class ChannelizeWidget {
 				this.convWindows.forEach(conversationWindow => {
 					conversationWindow.addNewMessage(data.message);
 				});
+
+				this.threads.forEach(thread => {
+					thread.addNewMessage(data.message);
+				});
 			}
 		});
 
 		// Handle delete message for me
 		window.channelize.chsocket.on('user.message_deleted', (data) => {
 			let updatedLastMsg;
-			// Remove message from conversation screen
+			
+			// Remove message from conversation window
 			if(document.getElementById(data.messages[0].id)) {
 				document.getElementById(data.messages[0].id).remove();
 
@@ -155,45 +164,56 @@ class ChannelizeWidget {
 			if(this.recentConversations) {
 				this.recentConversations.deleteLastMessage(data, updatedLastMsg);
 			}
+
+			// Remove messge from thread screen
+			this.threads.forEach(thread => {
+				thread.handleDeleteForMe(data);
+			});
 		});
 
 		// Handle delete message for everyone
 		window.channelize.chsocket.on('message.deleted_for_everyone', (data) => {
-			// Update message text in conversation screen
+			// Update message text in recent screen
+			if(this.recentConversations) {
+				this.recentConversations.updateDeleteForEveryoneMsg(data);
+			}
+
+			// Update message text in conversation window
 			this.convWindows.forEach(conversationWindow => {
 				conversationWindow.updateDeleteForEveryoneMsg(data);
 			});
-
-			// Update message text in recent screen
-			let recentTargetMsg = document.getElementById("ch_msg_" + data.messages[0].id);
-			if(recentTargetMsg) {
-				// Remove if media/location/sticker/gif icon present
-				if(recentTargetMsg.parentNode.firstChild.nodeName != "DIV")
-					recentTargetMsg.parentNode.firstChild.remove();
-
-				recentTargetMsg.innerHTML = "<i>" + LANGUAGE_PHRASES.MESSAGE_DELETED;
-			}
+			
+			// Update message text in thread screen
+			this.threads.forEach(thread => {
+				thread.updateDeleteForEveryoneMsg(data);
+			});
 		});
 
 		// Handle mark as read
 		window.channelize.chsocket.on('conversation.mark_as_read', (data) => {
-			if(this.userId == data.user.id)
+			if(this.userId == data.user.id) {
 				return;
+			}
 
 			// Update lastReadAt of conversation
 			if(this.recentConversations) {
 				this.recentConversations.updateReadAt(data);
 			}
 
-			// Update message read status in conversation screen
+			// Update message read status in conversation window
 			this.convWindows.forEach(conversationWindow => {
 				conversationWindow.updateMsgStatus(data);
+			});
+
+			// Update message read status in threads screen
+			this.threads.forEach(thread => {
+				thread.updateMsgStatus(data);
 			});
 		});
 
 		// Handle user online/ofline status
 		window.channelize.chsocket.on('user.status_updated', (data) => {
-			if(this.recentConversations) {
+			if (this.recentConversations) {
 				this.recentConversations.updateUserStatus(data.user);
 			}
 
@@ -202,10 +222,9 @@ class ChannelizeWidget {
 			});
 
 			if(document.getElementById(data.user.id+"_member_online_icon")) {
-				if(data.user.isOnline) {
+				if (data.user.isOnline) {
 					document.getElementById(data.user.id+"_member_online_icon").classList.add("ch-show-element");
-				}
-				else {
+				} else {
 					document.getElementById(data.user.id+"_member_online_icon").classList.remove("ch-show-element");
 				}
 			}
@@ -214,28 +233,36 @@ class ChannelizeWidget {
 		// Handle clear conversation
 		window.channelize.chsocket.on('user.conversation_cleared', (data) => {
 			// Delete last message from particular recent conversation
-			if(document.getElementById(data.conversation.id) && document.getElementById(data.conversation.id).lastChild)
-				document.getElementById(data.conversation.id).lastChild.remove();
+			if (this.recentConversations) {
+				this.recentConversations.handleClearConversation(data.conversation);
+			}
 
 			// Remove all messages of the conversation
 			this.convWindows.forEach(conversationWindow => {
 				conversationWindow.handleClearConversation(data.conversation);
 			});
+
+			// Remove all messages of the thread
+			this.threads.forEach(thread => {
+				thread.handleClearConversation(data.conversation);
+			});
 		});
 
 		// Handle delete conversation
 		window.channelize.chsocket.on('user.conversation_deleted', (data) => {
-			// Delete last message from particular recent conversation
-			if(document.getElementById(data.conversation.id) && document.getElementById(data.conversation.id).lastChild)
-				document.getElementById(data.conversation.id).remove();
+			// Remove the conversation from recent conversation
+			if (this.recentConversations) {
+				this.recentConversations.handleDeleteConversation(data.conversation);
+			}
 
-			// Remove conversation screen
+			// Remove conversation window
 			this.convWindows.forEach(conversationWindow => {
-				if(conversationWindow.conversation.id == data.conversation.id) {
-					if(document.getElementById("ch_conv_window")) {
-						document.getElementById("ch_conv_window").remove();
-					}
-				}
+				conversationWindow.handleDeleteConversation(data.conversation);
+			});
+
+			// Remove threads screen
+			this.threads.forEach(thread => {
+				thread.handleDeleteConversation(data.conversation);
 			});
 		});
 
@@ -246,9 +273,14 @@ class ChannelizeWidget {
 				this.recentConversations.handleBlock(data);
 			}
 			
-			// Update conversation screen of block user
+			// Update conversation window of block user
 			this.convWindows.forEach(conversationWindow => {
 				conversationWindow.handleBlock(data);
+			});
+
+			// Update thread screen of block user
+			this.threads.forEach(thread => {
+				thread.handleBlock(data);
 			});
 		});
 
@@ -259,9 +291,14 @@ class ChannelizeWidget {
 				this.recentConversations.handleUnblock(data);
 			}
 			
-			// Update conversation screen of unblock user
+			// Update conversation window of unblock user
 			this.convWindows.forEach(conversationWindow => {
 				conversationWindow.handleUnblock(data);
+			});
+
+			// Update thread screen of unblock user
+			this.threads.forEach(thread => {
+				thread.handleUnblock(data);
 			});
 		});
 
@@ -332,36 +369,72 @@ class ChannelizeWidget {
 		});
 	}
 
-	// To open a conversation screen of any user via member-id or conversation-id
-	loadConversationWindow(otherMemberId, conversationId = null) {
-		if(otherMemberId) {
-			this.chAdapter.getConversationsList(1, 0, otherMemberId, "members", null, null, null, null, null, (err, conversations) => {
-				if(err) return console.error(err);
+	// To open a conversation window via conversation-id
+	loadConversationWindow(conversationId ) {
+		let conversation = this.chAdapter.getConversation(conversationId, (err, conversation) => {
+			if(err) return console.error(err);
 
-				if(!conversations.length) {
-					console.error(LANGUAGE_PHRASES.CONVERSATION_NOT_FOUND);
-					return;
-				}
+			let conversationWindow = new ConversationWindow(this);
+			conversationWindow.init(conversation); // Pass conversation object in params
+			this.convWindows.push(conversationWindow);
+		});
+	}
 
-				let conversationWindow = new ConversationWindow(this);
-				conversationWindow.init(conversations[0]); // Pass conversation object in params
-				this.convWindows.push(conversationWindow);
+	// To open a conversation window of any user via user-id
+	loadConversationWindowByUserId(userId) {
+		this.chAdapter.getConversationsList(1, 0, userId, "members", null, null, null, null, null, (err, conversations) => {
+			if(err) return console.error(err);
+
+			if(!conversations.length) {
+				console.error(LANGUAGE_PHRASES.CONVERSATION_NOT_FOUND);
+				return;
+			}
+
+			let conversationWindow = new ConversationWindow(this);
+			conversationWindow.init(conversations[0]); // Pass conversation object in params
+			this.convWindows.push(conversationWindow);
+		});
+	}
+
+	handleConversationEvents(conversation) {
+		
+		// Handle add reaction
+		conversation.on('reaction.added', (data) => {
+			// Handle add reaction on conversation window
+			this.convWindows.forEach(conversationWindow => {
+				conversationWindow.handleAddReaction(data);
 			});
-		}
-		else if(conversationId) {
-			let conversation = this.chAdapter.getConversation(conversationId, (err, conversation) => {
-				if(err) return console.error(err);
-
-				let conversationWindow = new ConversationWindow(this);
-				conversationWindow.init(conversation); // Pass conversation object in params
-				this.convWindows.push(conversationWindow);
+			
+			// Handle add reaction on thread screen
+			this.threads.forEach(thread => {
+				thread.handleAddReaction(data);
 			});
-		}
+		});
+
+		// Handle remove reaction
+		conversation.on('reaction.removed', (data) => {
+			// Handle remove reaction on conversation window
+			this.convWindows.forEach(conversationWindow => {
+				conversationWindow.handleRemoveReaction(data);
+			});
+
+			// Handle remove reaction on thread screen
+			this.threads.forEach(thread => {
+				thread.handleRemoveReaction(data);
+			});
+
+		});
 	}
 
 	loadConversationMembers(conversationId) {
 		new Members(this, conversationId);
 	}
+
+	loadThread(message, conversation) {
+		let thread =  new Thread(this, message, conversation);
+		this.threads.push(thread);
+ 	}
+
 }
 
 window.ChannelizeWidget = ChannelizeWidget;

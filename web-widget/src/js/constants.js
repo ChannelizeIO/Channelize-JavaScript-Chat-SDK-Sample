@@ -22,6 +22,7 @@ export const LANGUAGE_PHRASES = {
 	LOCATION : "Location",
 	STICKER : "Sticker",
 	GIF : "GIF",
+	DOCUMENT : "Document",
 	ATTACHMENT : "Attachment",
 	SEND_ATTACHMENTS : "Send Attachments",
 	MEMBERS : "Members",
@@ -45,7 +46,16 @@ export const LANGUAGE_PHRASES = {
 	GROUP_MEMBER_ADDED : "New member added in group",
 	GROUP_MEMBER_REMOVED : "One member removed from group",
 	GROUP_ADMIN_UPDATED : "Group admin updated",
-	CONVERSATION_NOT_FOUND : "Conversation not fond"
+	CONVERSATION_NOT_FOUND : "Conversation not fond",
+	YOU : "You",
+	REPLIES : "Replies",
+	THREAD : "Thread",
+	REPLY_IN_THREAD : "Reply in Thread",
+	VIEW_THREAD : "View thread",
+	START_OF_A_NEW_THREAD : "Start of a new thread",
+	SEND_DIRECT_MESSAGE : "Also send as direct message",
+	SEND_TO_CONVERSATION : "Also sent to the conversation",
+	REPLY_OF_THREAD : "Reply of thread"
 }
 
 export const IMAGES = {
@@ -67,5 +77,26 @@ export const IMAGES = {
 
 export const SETTINGS = {
 	LOCATION_API_KEY : "AIzaSyBzrL8FaUvmYPIxEUd_VTPpqcACtPdniik",
-	LOCATION_IMG_URL : "https://maps.googleapis.com/maps/api/staticmap"
+	LOCATION_IMG_URL : "https://maps.googleapis.com/maps/api/staticmap",
+	ALLOW_MESSAGE_THREADING: true,
+	REACTION_SETTINGS : {
+		enable: true,
+		types: {
+			"like": "👍",
+			"dislike": "👎",
+			"laughing": "😆",
+			"angry": "😡"
+		}
+	}
+}
+
+export const ICONS = {
+	"image" : "photo",
+	"video" : "play_circle_outline",
+	"file" : "attach_file",
+	"audio" : "headset",
+	"sticker" : "sentiment_very_satisfied",
+	"gif" : "gif",
+	"location" : "room",
+	"document" : "insert_drive_file"
 }

@@ -21,7 +21,7 @@ class ChannelizeAdapter {
 	}
 
 	getLoginUser() {
-		return this.channelize.getLoginUser();
+		return this.channelize.getCurrentUser();
 	}
 
 	connect(userId, accessToken, cb) {
@@ -98,7 +98,7 @@ class ChannelizeAdapter {
 		});
 	}
 
-	addMember(conversation, memberIds, cb) {
+	addMembers(conversation, memberIds, cb) {
 	    conversation.addMembers(memberIds, function (err, res) {
 	    	if (err) return cb(err);
 
@@ -106,7 +106,7 @@ class ChannelizeAdapter {
 	    });
 	}
 
-	removeMember(conversation, memberIds, cb) {
+	removeMembers(conversation, memberIds, cb) {
 	    conversation.removeMembers(memberIds, function (err, res) {
 	    	if (err) return cb(err);
 
@@ -114,7 +114,7 @@ class ChannelizeAdapter {
 	    });
 	}
 
-	blockMember(userId, cb) {
+	blockUser(userId, cb) {
 		this.channelize.User.block(userId, function (err, res) {
 			if (err) return cb(err);
 
@@ -122,7 +122,7 @@ class ChannelizeAdapter {
 	    });
 	}
 
-	unblockMember(userId, cb) {
+	unblockUser(userId, cb) {
 		this.channelize.User.unblock(userId, function (err, res) {
 			if (err) return cb(err);
 
@@ -186,7 +186,7 @@ class ChannelizeAdapter {
 	    });
 	}
 
-	async sendMessage(conversation, data, cb) {
+	sendMessage(conversation, data, cb) {
 	    conversation.sendMessage(data, function (err, res) {
 	    	if (err) return cb(err);
 
@@ -194,7 +194,7 @@ class ChannelizeAdapter {
 	    });
 	}
 
-	async sendMessageToUser(data, cb) {
+	sendMessageToUser(data, cb) {
 	    this.channelize.Message.sendMessage(data, function (err, message) {
 	    	if (err) return cb(err);
 
@@ -202,8 +202,8 @@ class ChannelizeAdapter {
 	    });
 	}
 
-	async uploadFile(file, createThumbnail, cb) {
-	    this.channelize.Message.uploadFile(file, createThumbnail, function(err, message) {
+	uploadFile(file, type, createThumbnail, cb) {
+	    this.channelize.File.upload(file, type, createThumbnail, function(err, message) {
 	    	if (err) return cb(err);
 
 	    	return cb(null, message);
@@ -230,7 +230,7 @@ class ChannelizeAdapter {
 	    return conversation.getConfig(key);
 	}
 
-	getMessages(conversation, limit, skip, ids, types, attachmentTypes, ownerIds, cb) {
+	getMessages(conversation, limit, skip, ids, types, attachmentTypes, ownerIds, parentId, showInConversation, cb) {
 		let messageListQuery = conversation.createMessageListQuery();
 		messageListQuery.sort = 'createdAt DESC';
 		messageListQuery.limit = limit ? limit : 50;
@@ -239,7 +239,9 @@ class ChannelizeAdapter {
 		messageListQuery.types = types;
 		messageListQuery.attachmentTypes = attachmentTypes;
 		messageListQuery.ownerIds = ownerIds;
-
+		messageListQuery.parentId = parentId;
+		messageListQuery.showInConversation = showInConversation;
+		
 		messageListQuery.list(function (err, messages) {
 			if (err) return cb(err);
 
@@ -299,6 +301,22 @@ class ChannelizeAdapter {
 			if(err) return cb(err);
 
 			return cb(null, users);
+		});
+	}
+
+	addReaction(message, data, cb) {
+		message.addReaction(data, function (err, res) {
+			if(err) return cb(err);
+
+			return cb(null, res);
+		});
+	}
+
+	removeReaction(message, data, cb) {
+		message.removeReaction(data, function (err, res) {
+			if(err) return cb(err);
+
+			return cb(null, res);
 		});
 	}
 }
