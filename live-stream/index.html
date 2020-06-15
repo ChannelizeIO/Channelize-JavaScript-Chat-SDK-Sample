@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Channelize.io - Live Stream Demo</title>
+  </head>
+  <style type="text/css">
+    body {
+      height: 580px;
+    }
+    .live-stream-demo {
+      margin: 20px;
+    }
+    .video-screen {
+      display: inline-block;
+      margin: 43px;
+    }
+    .live-stream {
+      float: right;
+    }
+  </style>
+  <body>
+    <div class="live-stream-demo">
+      <div class="video-screen">
+        <img src="https://cdn.channelize.io/apps/live-stream/2.0.0/images/live-stream.png" width="700" height="450px">
+      </div>
+      <div class="live-stream">
+        <div id="ch_live_stream"></div>
+      </div>
+    </div>
+  </body>
+   
+  <script src="https://cdn.channelize.io/sdk/4.2.0/browser.js"></script>
+  <script src="https://cdn.channelize.io/apps/live-stream/2.0.0/liveStream.Channelize.js"></script>
+
+  <script>
+    const channelizeLiveStream = new ChannelizeLiveStream('qHvonVEyIxDLa6zh');
+    channelizeLiveStream.load((err,res)=> {});
+  </script>
+</html>

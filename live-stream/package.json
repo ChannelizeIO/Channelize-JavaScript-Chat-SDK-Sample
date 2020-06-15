@@ -1,0 +1,28 @@
+{
+  "name": "js-web-live-stream",
+  "version": "1.0.0",
+  "description": "Channelize Web Live Stream Sample App",
+  "main": "index.js",
+  "scripts": {
+    "build": "./node_modules/.bin/webpack --mode production",
+    "start": "node server.js"
+  },
+  "author": "Channelize",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.7.4",
+    "@babel/preset-env": "^7.7.4",
+    "babel-loader": "^8.0.6",
+    "css-loader": "^3.4.0",
+    "express": "^4.17.1",
+    "node-sass": "^4.13.0",
+    "sass-loader": "^8.0.0",
+    "style-loader": "^1.1.2",
+    "uuid": "^7.0.3",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.10"
+  },
+  "dependencies": {
+    "moment": "^2.26.0"
+  }
+}

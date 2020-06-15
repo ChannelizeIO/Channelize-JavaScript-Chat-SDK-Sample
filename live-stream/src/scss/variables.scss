@@ -1,0 +1,25 @@
+/*Font family*/
+@import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
+$ch-body-font-family: 'Roboto', sans-serif;
+$ch-body-font-size: 14px;
+
+/*Theme type*/
+$dark-theme: false;
+
+/*Colors variables*/
+$theme-color : #2175f5;
+$primary-text-color : #4a505a;
+$secondary-text-color : #969391;
+$bg-color : #fff;
+$bubble-bg-color: #f5f5f5;
+$hover-color : #0000000a;
+
+@if $dark-theme {
+  $primary-text-color : lighten($primary-text-color, 60%);
+  $secondary-text-color : lighten($secondary-text-color, 60%);
+  $bg-color: darken($bg-color, 90%);
+  $bubble-bg-color: darken($bubble-bg-color, 90%);
+}
+
+$ch-screen-height: 550px;
+$ch-screen-width: 400px;
