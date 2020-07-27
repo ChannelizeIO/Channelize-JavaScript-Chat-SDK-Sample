@@ -24,7 +24,7 @@ Add the Channelize live stream div in the body tag of your website.
 Import the `liveStream.Channelize.js` file after body tag in your website.
 
 ```javascript
-<script src="https://cdn.channelize.io/apps/live-stream/2.0.0/liveStream.Channelize.js"></script>
+<script src="https://cdn.channelize.io/apps/live-stream/2.1.0/liveStream.Channelize.js"></script>
 ```
 
 ##### Step 3: Import Channelize JS-SDK #####
@@ -32,7 +32,7 @@ Import the `liveStream.Channelize.js` file after body tag in your website.
 Import the [`Channelize JS-SDK`](https://docs.channelize.io/javascript-sdk-introduction-overview) after body tag in your website.
 
 ```javascript
-<script src="https://cdn.channelize.io/sdk/4.2.0/browser.js"></script>
+<script src="https://cdn.channelize.io/sdk/4.3.0/browser.js"></script>
 ```
 
 ##### Step 4: Create live stream object #####

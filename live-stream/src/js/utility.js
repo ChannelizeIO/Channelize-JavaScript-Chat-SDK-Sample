@@ -1,5 +1,6 @@
 import moment from 'moment';
-import { LANGUAGE_PHRASES } from "./constants.js";
+import { LANGUAGE_PHRASES, SETTINGS } from "./constants.js";
+import { GiphyFetch } from '@giphy/js-fetch-api'
 
 class Utility {
 	constructor() {}
@@ -100,6 +101,27 @@ class Utility {
     actualDuration = duration / 1000;
     updatedDuration = ((Math.floor(actualDuration / 60) + (actualDuration % 60) / 100).toFixed(2)).toString().replace('.',':');
     return updatedDuration;
+  }
+
+  async getStickersGifs(contentType = 'stickers', offset = 0, limit = 15, searchTerm = null, language = 'en') {
+    const giphy = new GiphyFetch(SETTINGS.GIPHY_API_KEY);
+    try {
+      if (searchTerm) {
+        const { data: gifs } = await giphy.search(searchTerm, { type: contentType, offset, limit, lang: language })
+        return gifs;
+      }
+      const { data: gifs } = await giphy.trending({ type: contentType, offset, limit, lang: language })
+      return gifs;
+    } catch (error) {
+      return [];
+    }
+  }
+
+  getUrls(text) {
+    if (text) {
+      return text.match(/(?:(?:https?|ftp|file):\/\/|www\.|ftp\.)(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#\/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[A-Z0-9])/igm) || [];
+    }
+    return [];
   }
 }
 

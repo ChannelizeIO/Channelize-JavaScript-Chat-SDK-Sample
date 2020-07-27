@@ -319,6 +319,14 @@ class ChannelizeAdapter {
 			return cb(null, res);
 		});
 	}
+
+	getUrlMetaData(message, cb) {
+		message.getUrlMetaData(function (err, res) {
+			if(err) return cb(err);
+
+			return cb(null, res);
+		});
+	}
 }
 
 export { ChannelizeAdapter as default };

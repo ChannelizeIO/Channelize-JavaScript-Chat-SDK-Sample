@@ -22,7 +22,9 @@ ul {
 .ch-show-element {
   display: block !important;
 }
-
+.emoji-picker__preview {
+  display: none !important;
+}
 #ch_snackbar {
   min-width: 250px;
   margin-left: -125px;
@@ -154,7 +156,7 @@ ul {
 }
 
 /*screen scroll*/
-.ch-messages-box, .ch-thread-messages-box {
+.ch-messages-box, .ch-thread-messages-box, .ch-sticker-gif-picker-content, .ch-thread-sticker-gif-picker-content {
   &::-webkit-scrollbar {
     width: .4em;
     overflow: visible;
@@ -544,13 +546,13 @@ ul {
             overflow: hidden;
             border-radius: 2px;
           }
-          .ch-video-message, .ch-image-message, .ch-location-message, .ch-sticker-message {
+          .ch-video-message, .ch-image-message, .ch-sticker-message {
             background-size: cover;
             position: relative;
             cursor: pointer;
             background-position: center;
             background-repeat: no-repeat;
-            height: 140px;
+            height: 180px;
             min-width: 180px;
             margin: -10px;
             border: 1px solid #eee;
@@ -563,6 +565,26 @@ ul {
               text-align: center;
               color: $bg-color;
               font-size: 55px;
+            }
+          }
+          .ch-location-message {
+            background-size: cover;
+            position: relative;
+            cursor: pointer;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 110px;
+            min-width: 220px;
+            margin: -10px;
+            border: 1px solid #eee;
+            border-radius: 6px 6px 6px 0;
+          }
+          .ch-location-place-address {
+            margin-top: 20px;
+            .ch-location-place {
+              display: block;
+              font-weight: 600;
+              padding: 0px 0px 5px 0px;
             }
           }
           .ch-audio-message {
@@ -585,7 +607,7 @@ ul {
         caret-color: $theme-color;
         outline: none;
         border: none;
-        width: calc(100% - 60px);
+        width: calc(100% - 90px);
         color: $primary-text-color;
         resize: none;
         font-size: 15px;
@@ -613,6 +635,127 @@ ul {
         color: $theme-color;
         vertical-align: middle;
       }
+      .ch-emoji-btn {
+        display: inline-block;
+        font-size: 22px;
+        cursor: pointer;
+        color: $theme-color;
+        vertical-align: middle;
+        margin: 0px 3px;
+      }
+      .ch-sticker-gif-picker-model {
+        position: absolute;
+        opacity: 0;
+        visibility: hidden;
+        left: 0;
+        right: 0;
+        bottom: 54px;
+        background: $bg-color;
+        z-index: 99;
+        transition: .5s;
+        -webkit-box-shadow: 0 -4px 8px 0 rgba(0,0,0,0.2);
+        -webkit-transition: .5s;
+        box-shadow: 0 -4px 8px 0 rgba(0,0,0,0.2);
+        border-radius: 10px 10px 0 0;
+        overflow: hidden;
+        color: $primary-text-color;
+        .ch-sticker-gif-picker-header {
+          border-bottom: 1px solid #d6d6d6;
+          min-height: 40px;
+          padding: 10px;
+        }
+        .ch-sticker-gif-picker-search, .ch-sticker-gif-picker-header-switcher, .ch-sticker-gif-picker-close-btn {
+          display: inline-block;
+          vertical-align: middle;
+        }
+        .ch-sticker-gif-picker-search-icon, .ch-sticker-gif-picker-search-bar {
+          vertical-align: middle;
+        }
+        .ch-sticker-gif-picker-search {
+          border: 1px solid #aeadad;
+          border-radius: 5px;
+          padding: 5px;
+        }
+        .ch-sticker-gif-picker-search-bar {
+          caret-color: $theme-color;
+          color: $primary-text-color;
+          display: inline-block;
+          border: 0px;
+          width: 225px;
+        }
+        .ch-sticker-gif-picker-search-bar:focus {
+          outline: none;
+        }
+        .ch-sticker-gif-picker-search-bar-clear {
+          vertical-align: middle;
+          opacity: .7;
+        }
+        .ch-sticker-gif-picker-search-bar-clear:hover {
+          cursor: pointer;
+          opacity: 1;
+        }
+        .ch-sticker-gif-picker-header-switcher {
+          width: 75px;
+          img {
+            margin: 0px 5px;
+            cursor: pointer;
+          }
+          .ch-sticker-gif-picker-header-switcher-btn.ch-active {
+            border-bottom: 2px solid $theme-color;
+          }
+        }
+        .ch-sticker-gif-picker-close-btn {
+          float: right;
+          top: 14px;
+          right: 12px;
+          position: absolute;
+          opacity: .7;
+        }
+        .ch-sticker-gif-picker-close-btn:hover {
+          cursor: pointer;
+          opacity: 1;
+        }
+        .ch-sticker-gif-picker-content {
+          height: 300px;
+          overflow-y: scroll;
+          .ch-sticker-gif-picker-loader {
+            position: absolute;
+            left: 0;
+            right: 0;
+            margin: 0 auto;
+            top: 25%;
+            border: 5px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 5px solid $theme-color;
+            width: 30px;
+            height: 30px;
+            -webkit-animation: spin 1s linear infinite; /* Safari */
+            animation: spin 1s linear infinite;
+          }
+          .ch-sticker-gif-picker-error {
+            text-align: center;
+            margin-top: 10px;
+          }
+          .ch-sticker-gif-picker-item {
+            width: 32%;
+            display: inline-block;
+            margin: 2px;
+            height: 100px;
+            img {
+              width: 100%;
+              height: 100%;
+              cursor: pointer;
+            }
+          }
+
+        }
+      }
+      .ch-sticker-gif-picker-model.ch-show {
+        opacity: 1;
+        bottom: 100%;
+        visibility: visible;
+      }
+      
       .ch-media-docker {
         position: absolute;
         opacity: 0;
@@ -630,25 +773,34 @@ ul {
         border-radius: 10px 10px 0 0;
         overflow: hidden;
         text-align: center;
-        .ch-video-option{
+        .ch-location-option{
           margin-right: 0 !important;
         }
-        .ch-image-option, .ch-audio-option, .ch-video-option {
+        .ch-image-option, .ch-sticker-option, .ch-gif-option, .ch-audio-option, .ch-video-option, .ch-location-option {
           display: inline-block;      
           position: relative;
           text-align: center;
-          margin-right: 35px;
+          margin-right: 17px;
           color: $primary-text-color;
           .ch-image-icon-span{
             background-color: #64b5f6;
+          }
+          .ch-sticker-icon-span{
+            background-color: #FFD54F;
+          }
+          .ch-gif-icon-span{
+            background-color: #75fdbc;
           }
           .ch-audio-icon-span{
             background-color: #ff8a65;
           }
           .ch-video-icon-span{
             background-color: #f7dc6f;
-          }      
-          .ch-image-icon-span, .ch-audio-icon-span, .ch-video-icon-span {
+          }
+          .ch-location-icon-span {
+            background-color: #FFD54F;
+          }
+          .ch-image-icon-span, .ch-sticker-icon-span, .ch-gif-icon-span, .ch-audio-icon-span, .ch-video-icon-span, .ch-location-icon-span {
             height: 45px;
             width: 45px;        
             display: block;
@@ -922,13 +1074,13 @@ ul {
           .ch-message-body {
             margin: 0px;
           }
-          .ch-video-message, .ch-image-message, .ch-location-message, .ch-sticker-message {
+          .ch-video-message, .ch-image-message, .ch-sticker-message {
             background-size: cover;
             position: relative;
             cursor: pointer;
             background-position: center;
             background-repeat: no-repeat;
-            height: 140px;
+            height: 180px;
             min-width: 180px;
             margin: -10px;
             border: 1px solid #eee;
@@ -941,6 +1093,26 @@ ul {
               text-align: center;
               color: $bg-color;
               font-size: 55px;
+            }
+          }
+          .ch-location-message {
+            background-size: cover;
+            position: relative;
+            cursor: pointer;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 110px;
+            min-width: 220px;
+            margin: -10px;
+            border: 1px solid #eee;
+            border-radius: 6px 6px 6px 0;
+          }
+          .ch-location-place-address {
+            margin-top: 20px;
+            .ch-location-place {
+              display: block;
+              font-weight: 600;
+              padding: 0px 0px 5px 0px;
             }
           }
           .ch-audio-message {
@@ -962,7 +1134,7 @@ ul {
   }
   .ch-thread-send-box {
     border-top: 1px solid #d6d6d6;
-    min-height: 54px;
+    min-height: 57px;
     background: $bg-color;
     font-size: 13px;
     position: relative;
@@ -972,7 +1144,7 @@ ul {
         caret-color: $theme-color;
         outline: none;
         border: none;
-        width: calc(100% - 60px);
+        width: calc(100% - 90px);
         color: $primary-text-color;
         resize: none;
         font-size: 15px;
@@ -981,7 +1153,6 @@ ul {
         background: transparent;
       }
       button {
-        padding: 0;
         margin: 0;
         background: transparent;
         border: none;
@@ -995,12 +1166,131 @@ ul {
         }
       }
       .ch-thread-attachment-btn {
-        margin-right: 5px;
         display: inline-block;
         vertical-align: middle;
         font-size: 22px;
         cursor: pointer;
         color: $theme-color;
+      }
+      .ch-thread-emoji-btn {
+        display: inline-block;
+        vertical-align: middle;
+        font-size: 22px;
+        cursor: pointer;
+        color: $theme-color;
+        margin: 0px 3px;
+      }
+      .ch-thread-sticker-gif-picker-model {
+        position: absolute;
+        opacity: 0;
+        visibility: hidden;
+        left: 0;
+        right: 0;
+        bottom: 54px;
+        background: $bg-color;
+        z-index: 99;
+        transition: .5s;
+        -webkit-box-shadow: 0 -4px 8px 0 rgba(0,0,0,0.2);
+        -webkit-transition: .5s;
+        box-shadow: 0 -4px 8px 0 rgba(0,0,0,0.2);
+        border-radius: 10px 10px 0 0;
+        overflow: hidden;
+        color: $primary-text-color;
+        .ch-thread-sticker-gif-picker-header {
+          border-bottom: 1px solid #d6d6d6;
+          min-height: 40px;
+          padding: 10px;
+        }
+        .ch-thread-sticker-gif-picker-search, .ch-thread-sticker-gif-picker-header-switcher, .ch-thread-sticker-gif-picker-close-btn {
+          display: inline-block;
+          vertical-align: middle;
+        }
+        .ch-thread-sticker-gif-picker-search-icon, .ch-thread-sticker-gif-picker-search-bar {
+          vertical-align: middle;
+        }
+        .ch-thread-sticker-gif-picker-search {
+          border: 1px solid #aeadad;
+          border-radius: 5px;
+          padding: 5px;
+        }
+        .ch-thread-sticker-gif-picker-search-bar {
+          caret-color: $theme-color;
+          color: $primary-text-color;
+          display: inline-block;
+          border: 0px;
+          width: 225px;
+        }
+        .ch-thread-sticker-gif-picker-search-bar:focus {
+          outline: none;
+        }
+        .ch-thread-sticker-gif-picker-search-bar-clear {
+          vertical-align: middle;
+          opacity: .7;
+        }
+        .ch-thread-sticker-gif-picker-search-bar-clear:hover {
+          cursor: pointer;
+          opacity: 1;
+        }
+        .ch-thread-sticker-gif-picker-header-switcher {
+          width: 75px;
+          img {
+            margin: 0px 5px;
+            cursor: pointer;
+          }
+          .ch-thread-sticker-gif-picker-header-switcher-btn.ch-active {
+            border-bottom: 2px solid $theme-color;
+          }
+        }
+        .ch-thread-sticker-gif-picker-close-btn {
+          float: right;
+          top: 14px;
+          right: 12px;
+          position: absolute;
+          opacity: .7;
+        }
+        .ch-thread-sticker-gif-picker-close-btn:hover {
+          cursor: pointer;
+          opacity: 1;
+        }
+        .ch-thread-sticker-gif-picker-content {
+          height: 300px;
+          overflow-y: scroll;
+          .ch-thread-sticker-gif-picker-loader {
+            position: absolute;
+            left: 0;
+            right: 0;
+            margin: 0 auto;
+            top: 25%;
+            border: 5px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 5px solid $theme-color;
+            width: 30px;
+            height: 30px;
+            -webkit-animation: spin 1s linear infinite; /* Safari */
+            animation: spin 1s linear infinite;
+          }
+          .ch-thread-sticker-gif-picker-error {
+            text-align: center;
+            margin-top: 10px;
+          }
+          .ch-thread-sticker-gif-picker-item {
+            width: 32%;
+            display: inline-block;
+            margin: 2px;
+            height: 100px;
+            img {
+              width: 100%;
+              height: 100%;
+              cursor: pointer;
+            }
+          }
+
+        }
+      }
+      .ch-thread-sticker-gif-picker-model.ch-show {
+        opacity: 1;
+        bottom: 100%;
+        visibility: visible;
       }
       .ch-thread-media-docker {
         position: absolute;
@@ -1019,17 +1309,23 @@ ul {
         border-radius: 10px 10px 0 0;
         overflow: hidden;
         text-align: center;
-        .ch-thread-video-option {
+        .ch-thread-location-option {
           margin-right: 0 !important;
         }
-        .ch-thread-image-option, .ch-thread-audio-option, .ch-thread-video-option {
+        .ch-thread-image-option, .ch-thread-sticker-option, .ch-thread-gif-option, .ch-thread-audio-option, .ch-thread-video-option, .ch-thread-location-option {
           display: inline-block;
           position: relative;
           text-align: center;
-          margin-right: 35px;
+          margin-right: 17px;
           color: $primary-text-color;
           .ch-thread-image-icon-span{
             background-color: #64b5f6;
+          }
+          .ch-thread-sticker-icon-span{
+            background-color: #FFD54F;
+          }
+          .ch-thread-gif-icon-span{
+            background-color: #75fdbc;
           }
           .ch-thread-audio-icon-span{
             background-color: #ff8a65;
@@ -1037,7 +1333,10 @@ ul {
           .ch-thread-video-icon-span{
             background-color: #f7dc6f;
           }
-          .ch-thread-image-icon-span, .ch-thread-audio-icon-span, .ch-thread-video-icon-span {
+          .ch-thread-location-icon-span{
+            background-color: #f7dc6f;
+          }
+          .ch-thread-image-icon-span, .ch-thread-sticker-icon-span, .ch-thread-gif-icon-span, .ch-thread-audio-icon-span, .ch-thread-video-icon-span, .ch-thread-location-icon-span {
             height: 45px;
             width: 45px;
             display: block;
@@ -1106,8 +1405,7 @@ ul {
     min-width: 100px;
     max-width: 100%;
     border-radius: 4px;
-    left: 15px;
-    top: 50px;
+    display: inline-block;
     .ch-scroll-menu {
       list-style: none;
       margin: 0;
@@ -1225,3 +1523,133 @@ ul {
   overflow: initial;
 }
 /*Message Reaction style end here*/
+
+.ch-location-model-model {
+  position: absolute;
+  opacity: 0;
+  visibility: hidden;
+  left: 0;
+  right: 0;
+  bottom: 0 !important;
+  background: $bg-color;
+  z-index: 99;
+  overflow: hidden;
+  color: $primary-text-color;
+  height: $ch-screen-height;
+  .ch-location-model-header i {
+    cursor: pointer;
+  }
+  .header-search {
+      padding: 5px 0px;
+    }
+  .ch-location-header-search {
+    .ch-location-header-search-left {
+      width: 10%;
+      display: inline-block;
+    }
+    .ch-location-header-search-right {
+      width: 90%;
+      display: inline-block;
+      .ch-location-model-search {
+        caret-color: $theme-color;
+        color: $primary-text-color;
+        font-size: 15px;
+        border: 0px;
+        width: 100%;
+      }
+      .ch-location-model-search:focus {
+        outline: none;
+      }
+    }
+  }
+  .ch-location-model-content {
+    height: calc(100% - 140px);
+    .ch-location-model-google-map {
+      height: 100%;
+    }
+  }
+  .ch-location-model-send-box {
+    margin: 25px 10px 10px 10px;
+    .ch-location-model-image-container {
+      width: 10%;
+      display: inline-block;
+      text-align: left;
+      .ch-location-model-image {
+        vertical-align: middle;
+      }
+    }
+    .ch-location-model-place-address {
+      width: 80%;
+      vertical-align: middle;
+      display: inline-block;
+      color: $primary-text-color;
+      margin: 0px;
+      span {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .ch-location-model-place {
+        font-size: 15px;
+        font-weight: 600;
+      }
+    }
+    .ch-location-model-send-btn {
+      width: 10%;
+      vertical-align: middle;
+      display: inline-block;
+      color: $theme-color;
+      text-align: right;
+      cursor: pointer;
+    }
+  }
+}
+.ch-location-model-model.ch-show {
+  opacity: 1;
+  bottom: 100%;
+  visibility: visible;
+}
+
+/* Rich Link Preview style start here */
+.preview-container {
+  background: #fff;
+  margin: 11px -10px -11px -10px;
+  padding: 7px 0 0 0;
+  margin-top: 20px;
+}
+.preview-content-container {
+  color: $primary-text-color;
+  background: $bubble-bg-color;
+  padding: 1px 10px 10px 10px;
+}
+.preview-image {
+  height: 125px;
+  background-size: cover;
+  width: 100%;
+  display: block;
+  margin: 0;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+.preview-container h3 {
+  font-size: 14px;
+  margin-top: 10px;
+  margin-bottom: 5px;
+  line-height: 17px;
+}
+.preview-container p {
+  margin-bottom: 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: $secondary-text-color;
+}
+.image-container {
+  margin-left: -10px;
+  margin-right: -10px;
+  margin-top: -1px;
+}
+.preview-container {
+  cursor: pointer;
+}
+/* Rich Link Preview style end here */

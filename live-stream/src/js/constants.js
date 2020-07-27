@@ -10,6 +10,7 @@ export const LANGUAGE_PHRASES = {
 	GIF : "GIF",
 	DOCUMENT : "Document",
 	ATTACHMENT : "Attachment",
+	SHARE_EMOJIS : "Share Emojis",
 	SEND_ATTACHMENTS : "Send Attachments",
 	FILE_SIZE_WARNING : "File size should be less then 25mb",
 	LOGIN : "Login",
@@ -37,7 +38,14 @@ export const LANGUAGE_PHRASES = {
 	TODAY : "Today",
 	YESTERDAY : "Yesterday",
 	MORE_OPTIONS : "More options",
-	REACT_TO_THIS_MESSAGE : "React to this message"
+	REACT_TO_THIS_MESSAGE : "React to this message",
+	SEARCH : "Search",
+	SEARCH_STICKERS : "Search Sticker",
+	SEARCH_GIFS : "Search Gifs",
+	CLEAR : "Clear",
+	CUREENT_LOCATION : "Cureent Location",
+	SHARE_LOCATION : "Share Location",
+	SEARCH_LOCATION : "Search Location"
 }
 
 export const IMAGES = {
@@ -51,15 +59,17 @@ export const IMAGES = {
 	LOCATION_ICON : "https://cdn.channelize.io/apps/live-stream/2.0.0/images/location.svg",
 	STICKER_ICON : "https://cdn.channelize.io/apps/live-stream/2.0.0/images/sticker.png",
 	GIF_ICON : "https://cdn.channelize.io/apps/live-stream/2.0.0/images/gif.png",
+	LOADING_IMAGE : "https://cdn.channelize.io/apps/live-stream/2.0.0/images/loading-image.gif",
 	AVTAR : "https://cdn.channelize.io/apps/live-stream/2.0.0/images/avtar.png",
 	GROUP : "https://cdn.channelize.io/apps/live-stream/2.0.0/images/group.png",
-	MESSAGE_LOADER : "https://cdn.channelize.io/apps/live-stream/2.0.0/images/image-loader.gif"
+	MESSAGE_LOADER : "https://cdn.channelize.io/apps/live-stream/2.0.0/images/message-loader.gif"
 }
 
 export const SETTINGS = {
 	LOCATION_API_KEY : "AIzaSyBzrL8FaUvmYPIxEUd_VTPpqcACtPdniik",
 	LOCATION_IMG_URL : "https://maps.googleapis.com/maps/api/staticmap",
 	CONVERSATION_ID : "b30976a2-abdf-11ea-8b53-e9b8792622de",
+	GIPHY_API_KEY : "sXpGFDGZs0Dv1mmNFvYaGUvYwKX0PWIh",
 	ALLOW_MESSAGE_THREADING: true,
 	REACTION_SETTINGS : {
 		enable: true,

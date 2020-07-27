@@ -1,6 +1,6 @@
 {
   "name": "js-web-live-stream",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Channelize Web Live Stream Sample App",
   "main": "index.js",
   "scripts": {
@@ -23,6 +23,9 @@
     "webpack-cli": "^3.3.10"
   },
   "dependencies": {
+    "@giphy/js-fetch-api": "^1.6.0",
+    "@joeattardi/emoji-button": "^3.1.1",
+    "google-maps": "^4.3.2",
     "moment": "^2.26.0"
   }
 }

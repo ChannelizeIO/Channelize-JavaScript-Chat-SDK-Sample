@@ -5,6 +5,7 @@ import Login from "./components/login.js";
 import Conversation from "./components/conversation.js";
 import Threads from "./components/threads.js";
 import { LANGUAGE_PHRASES, SETTINGS, IMAGES } from "./constants.js";
+import { Loader } from 'google-maps';
 
 class ChannelizeLiveStream {
 	constructor(publicKey) {
@@ -22,6 +23,7 @@ class ChannelizeLiveStream {
 		this.chAdapter = new ChannelizeAdapter(publicKey);
 		this.conversations = {};
 		this.threads = {};
+		this.initGoggleMapLibraries();
 	}
 
 	// Load channelize
@@ -41,6 +43,13 @@ class ChannelizeLiveStream {
 		} else {
 			this._createFrame();
 		}
+	}
+
+	initGoggleMapLibraries() {
+		const loader = new Loader(SETTINGS.LOCATION_API_KEY, {"&libraries":"places"});
+		loader.load().then((google) => {
+			this.google = google;
+		});
 	}
 
 	connect(userId, accessToken, cb) {
@@ -71,9 +80,7 @@ class ChannelizeLiveStream {
 			this.renderLogin();
 		}
 	}
-
 	
-
 	loadConversation(conversationId) {
 		// Destory the login screen
 		this.destroyLogin();
