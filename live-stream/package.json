@@ -1,6 +1,6 @@
 {
   "name": "js-web-live-stream",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Channelize Web Live Stream Sample App",
   "main": "index.js",
   "scripts": {
