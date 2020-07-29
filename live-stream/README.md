@@ -1,4 +1,4 @@
-# Channelize JavaScript Live Steam UI kit
+# Channelize.io JavaScript Live Stream Chat UI Kit
 
 This JavaScript Sample app is built using our [JavaScript SDK](https://docs.channelize.io/javascript-sdk-introduction-overview), this will help you add a live stream layout to your website which can be customized to build chat exactly how you want, and unbelievably quickly. It enables achieving a beautiful chat app interface for all use-cases like live chat, online consultation & tutoring, team collaboration, messaging, customer support and gaming chat. 
 
