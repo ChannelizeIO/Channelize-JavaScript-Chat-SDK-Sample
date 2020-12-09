@@ -534,10 +534,14 @@ class Conversation {
 			}
 			
 			// Remove the last message date time elements.
-			if (loadMoreMessages) {
-				let lastMessageDateTimeEle = document.getElementById("ch_msg_datetime_" + this.messages[this.messages.length - 1]['id']);
-				if (lastMessageDateTimeEle) {
-					lastMessageDateTimeEle.remove();
+			if (loadMoreMessages && messages.length) {
+				if ( moment(new Date(messages[0].createdAt)).format('DD/MM/YYYY') ==
+					moment(new Date(this.messages[this.messages.length - 1].createdAt)).format('DD/MM/YYYY')
+				){
+					let lastMessageDateTimeEle = document.getElementById("ch_msg_datetime_" + this.messages[this.messages.length - 1]['id']);
+					if (lastMessageDateTimeEle) {
+						lastMessageDateTimeEle.remove();
+					}
 				}
 			}
 
@@ -901,7 +905,7 @@ class Conversation {
 		let messagesBox = document.getElementById("ch_messages_box");
 
 		// Create message frame
-		this._createMessageBubble(msgData, messagesBox, false, true);
+		this._createMessageBubble(msgData, messagesBox, true, true);
 	}
 
 	_getMessages(conversation, limit, skip, cb) {
@@ -989,7 +993,7 @@ class Conversation {
 		message.createdAt = new Date();
 		
 		// Create message frame
-		this._createMessageBubble(message, messagesBox, false);
+		this._createMessageBubble(message, messagesBox, true, false);
 	}
 
 	_createMessageReactionFrame(message, parentDiv) {
@@ -1681,31 +1685,50 @@ class Conversation {
 		}
 	}
 	
-	_isDateDiffShown(messageId) {
-		const messageIndex = this.messages.findIndex(message => message.id == messageId);
-    if (messageIndex == -1) {
-    	return false;
-    }
+	_isDateDiffShown(currentMsgId, lastMsgId, isNewMessage) {
+		const messageIndex = this.messages.findIndex(message => message.id == currentMsgId);
+	    if (messageIndex == -1) {
+	    	return false;
+	    }
+	    const currentMsgDate = moment(new Date(this.messages[messageIndex].createdAt)).format('DD/MM/YYYY');
 
-  	if (!this.messages[messageIndex + 1]) {
-  		return true;
-  	}
+	    // Check if this new message
+	    // 1. Yes: this is new entered message.
+	    // 2. No: Means this is came from API.
+	    if (isNewMessage) {
+	    	// This in only one message.
+	    	if (!lastMsgId) {
+	    		return true;
+	    	}
+	    	const lastMsgIndex = this.messages.findIndex(message => message.id == lastMsgId);
+		    if (lastMsgIndex == -1) {
+		    	return true;
+		  	}
+		  	const lastMsgDate = moment(new Date(this.messages[lastMsgIndex].createdAt)).format('DD/MM/YYYY');
+		  	if (currentMsgDate != lastMsgDate) {
+		  		return true;
+			}
+			return false;
+	    }
 
-  	const currentMsgDate = moment(new Date(this.messages[messageIndex].createdAt)).format('DD/MM/YYYY');
-  	const nextMsgDate = moment(new Date(this.messages[messageIndex + 1].createdAt)).format('DD/MM/YYYY');
-  	
-  	if (currentMsgDate != nextMsgDate) {
-  		return true;
-  	}
-  	return false
+	  	if (!this.messages[messageIndex + 1]) {
+	  		return true;
+	  	}
+
+	  	const nextMsgDate = moment(new Date(this.messages[messageIndex + 1].createdAt)).format('DD/MM/YYYY');
+	  	if (currentMsgDate != nextMsgDate) {
+	  		return true;
+	  	}
+	  	return false;
 	}
 
-	_createMessageBubble(message, messagesBox, showDateDiff = true, isPendingMessage = false) {
+	_createMessageBubble(message, messagesBox, isNewMessage = false, isPendingMessage = false) {
 		// Create message list
+		const lastMsgId = messagesBox.lastChild && messagesBox.lastChild.id;
+		
 		let msgBubbleEleAttributes = [{"id":message.id},{"class":"ch-msg-bubble"}];
 		let msgBubbleEle = this.utility.createElement("div", msgBubbleEleAttributes, null, messagesBox);
-
-		if(showDateDiff && this._isDateDiffShown(message.id)) {
+		if(!isPendingMessage && this._isDateDiffShown(message.id, lastMsgId, isNewMessage)) {
 			let msgDateTimeAttributes = [{"id":"ch_msg_datetime_" + message.id},{"class":"ch-msg-datetime"}];
 			this.utility.createElement("div", msgDateTimeAttributes, this.utility.formatDate(message.createdAt), msgBubbleEle);
 		}
