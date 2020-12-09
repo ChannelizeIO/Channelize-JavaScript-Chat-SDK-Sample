@@ -1759,7 +1759,7 @@ class Conversation {
 		let msgContainer = this.utility.createElement("div", msgContainerAttributes, null, msgBubbleEle);
 
 		// Create message more options
-		let moreOptionAttributes = [{"class":"ch-msg-more-option ch-right"},{"title":LANGUAGE_PHRASES.MORE_OPTIONS}];
+		let moreOptionAttributes = [{"id":"ch_message_more_option_" + message.id},{"class":"ch-msg-more-option ch-right"},{"title":LANGUAGE_PHRASES.MORE_OPTIONS}];
 		let moreOption = this.utility.createElement("i", moreOptionAttributes, "more_vert", msgBubbleEle);
 		moreOption.classList.add("material-icons");
 
@@ -1772,7 +1772,7 @@ class Conversation {
 
 		// Create add reaction div.
 		if (this.reactionsSetting.enable && message.ownerId != this.liveStream.userId && !message.isDeleted) {
-			let addReactionEleAttributes = [{"class":"ch-add-reaction-option"},{"title":LANGUAGE_PHRASES.REACT_TO_THIS_MESSAGE}];
+			let addReactionEleAttributes = [{"id":"ch_message_insert_emoticon_" + message.id},{"class":"ch-add-reaction-option"},{"title":LANGUAGE_PHRASES.REACT_TO_THIS_MESSAGE}];
 			let addReactionEle = this.utility.createElement("i", addReactionEleAttributes, "insert_emoticon", msgBubbleEle);
 			addReactionEle.classList.add("material-icons");
 
@@ -1844,11 +1844,10 @@ class Conversation {
 			});
 		}
 
-		// Update listener of deleted message
-  	let targetMessage = document.getElementById(messageId)
-  	if (targetMessage) {
-  		let deletedMsgOptionBtn = targetMessage.lastChild;
-  		deletedMsgOptionBtn.addEventListener("click", data => {
+		// Update more option listener of deleted message
+		let moreOptionBtn = document.getElementById("ch_message_more_option_" + messageId);
+		if (moreOptionBtn) {
+			moreOptionBtn.addEventListener("click", data => {
 	  		// Remove delete for everyone option
 	  		let deleteForEveryoneBtn = document.getElementById("ch_msg_delete_for_everyone");
 	  		if (deleteForEveryoneBtn) {
@@ -1861,7 +1860,13 @@ class Conversation {
 	  			deleteStartThread.remove();
 	  		}
 	  	});
-  	}
+		}
+		
+		// Update insert emoticon listener of deleted message
+		let insertEmoticonBtn = document.getElementById("ch_message_insert_emoticon_" + messageId);
+		if (insertEmoticonBtn) {
+			insertEmoticonBtn.remove();
+		}
 	}
 
 	handleAddReaction(data) {
