@@ -534,10 +534,14 @@ class Conversation {
 			}
 			
 			// Remove the last message date time elements.
-			if (loadMoreMessages) {
-				let lastMessageDateTimeEle = document.getElementById("ch_msg_datetime_" + this.messages[this.messages.length - 1]['id']);
-				if (lastMessageDateTimeEle) {
-					lastMessageDateTimeEle.remove();
+			if (loadMoreMessages && messages.length) {
+				if ( moment(new Date(messages[0].createdAt)).format('DD/MM/YYYY') ==
+					moment(new Date(this.messages[this.messages.length - 1].createdAt)).format('DD/MM/YYYY')
+				){
+					let lastMessageDateTimeEle = document.getElementById("ch_msg_datetime_" + this.messages[this.messages.length - 1]['id']);
+					if (lastMessageDateTimeEle) {
+						lastMessageDateTimeEle.remove();
+					}
 				}
 			}
 
@@ -901,7 +905,7 @@ class Conversation {
 		let messagesBox = document.getElementById("ch_messages_box");
 
 		// Create message frame
-		this._createMessageBubble(msgData, messagesBox, false, true);
+		this._createMessageBubble(msgData, messagesBox, true, true);
 	}
 
 	_getMessages(conversation, limit, skip, cb) {
@@ -989,7 +993,7 @@ class Conversation {
 		message.createdAt = new Date();
 		
 		// Create message frame
-		this._createMessageBubble(message, messagesBox, false);
+		this._createMessageBubble(message, messagesBox, true, false);
 	}
 
 	_createMessageReactionFrame(message, parentDiv) {
@@ -1681,31 +1685,46 @@ class Conversation {
 		}
 	}
 	
-	_isDateDiffShown(messageId) {
-		const messageIndex = this.messages.findIndex(message => message.id == messageId);
+	_isDateDiffShown(currentMsgId, lastMsgId, isNewMessage) {
+		const messageIndex = this.messages.findIndex(message => message.id == currentMsgId);
     if (messageIndex == -1) {
     	return false;
+    }
+    const currentMsgDate = moment(new Date(this.messages[messageIndex].createdAt)).format('DD/MM/YYYY');
+    if (isNewMessage) {
+    	// This in only one message.
+    	if (!lastMsgId) {
+    		return true;
+    	}
+    	const lastMsgIndex = this.messages.findIndex(message => message.id == lastMsgId);
+	    if (lastMsgIndex == -1) {
+	    	return true;
+	  	}
+	  	const lastMsgDate = moment(new Date(this.messages[lastMsgIndex].createdAt)).format('DD/MM/YYYY');
+	  	if (currentMsgDate != lastMsgDate) {
+	  		return true;
+			}
+			return false;
     }
 
   	if (!this.messages[messageIndex + 1]) {
   		return true;
   	}
 
-  	const currentMsgDate = moment(new Date(this.messages[messageIndex].createdAt)).format('DD/MM/YYYY');
   	const nextMsgDate = moment(new Date(this.messages[messageIndex + 1].createdAt)).format('DD/MM/YYYY');
-  	
   	if (currentMsgDate != nextMsgDate) {
   		return true;
   	}
-  	return false
+  	return false;
 	}
 
-	_createMessageBubble(message, messagesBox, showDateDiff = true, isPendingMessage = false) {
+	_createMessageBubble(message, messagesBox, isNewMessage = false, isPendingMessage = false) {
 		// Create message list
+		const lastMsgId = messagesBox.lastChild && messagesBox.lastChild.id;
+		
 		let msgBubbleEleAttributes = [{"id":message.id},{"class":"ch-msg-bubble"}];
 		let msgBubbleEle = this.utility.createElement("div", msgBubbleEleAttributes, null, messagesBox);
-
-		if(showDateDiff && this._isDateDiffShown(message.id)) {
+		if(!isPendingMessage && this._isDateDiffShown(message.id, lastMsgId, isNewMessage)) {
 			let msgDateTimeAttributes = [{"id":"ch_msg_datetime_" + message.id},{"class":"ch-msg-datetime"}];
 			this.utility.createElement("div", msgDateTimeAttributes, this.utility.formatDate(message.createdAt), msgBubbleEle);
 		}
@@ -1736,7 +1755,7 @@ class Conversation {
 		let msgContainer = this.utility.createElement("div", msgContainerAttributes, null, msgBubbleEle);
 
 		// Create message more options
-		let moreOptionAttributes = [{"class":"ch-msg-more-option ch-right"},{"title":LANGUAGE_PHRASES.MORE_OPTIONS}];
+		let moreOptionAttributes = [{"id":"ch_message_more_option_" + message.id},{"class":"ch-msg-more-option ch-right"},{"title":LANGUAGE_PHRASES.MORE_OPTIONS}];
 		let moreOption = this.utility.createElement("i", moreOptionAttributes, "more_vert", msgBubbleEle);
 		moreOption.classList.add("material-icons");
 
@@ -1749,7 +1768,7 @@ class Conversation {
 
 		// Create add reaction div.
 		if (this.reactionsSetting.enable && message.ownerId != this.liveStream.userId && !message.isDeleted) {
-			let addReactionEleAttributes = [{"class":"ch-add-reaction-option"},{"title":LANGUAGE_PHRASES.REACT_TO_THIS_MESSAGE}];
+			let addReactionEleAttributes = [{"id":"ch_message_insert_emoticon_" + message.id},{"class":"ch-add-reaction-option"},{"title":LANGUAGE_PHRASES.REACT_TO_THIS_MESSAGE}];
 			let addReactionEle = this.utility.createElement("i", addReactionEleAttributes, "insert_emoticon", msgBubbleEle);
 			addReactionEle.classList.add("material-icons");
 
@@ -1821,11 +1840,10 @@ class Conversation {
 			});
 		}
 
-		// Update listener of deleted message
-  	let targetMessage = document.getElementById(messageId)
-  	if (targetMessage) {
-  		let deletedMsgOptionBtn = targetMessage.lastChild;
-  		deletedMsgOptionBtn.addEventListener("click", data => {
+		// Update more option listener of deleted message
+		let moreOptionBtn = document.getElementById("ch_message_more_option_" + messageId);
+		if (moreOptionBtn) {
+			moreOptionBtn.addEventListener("click", data => {
 	  		// Remove delete for everyone option
 	  		let deleteForEveryoneBtn = document.getElementById("ch_msg_delete_for_everyone");
 	  		if (deleteForEveryoneBtn) {
@@ -1838,7 +1856,13 @@ class Conversation {
 	  			deleteStartThread.remove();
 	  		}
 	  	});
-  	}
+		}
+		
+		// Update insert emoticon listener of deleted message
+		let insertEmoticonBtn = document.getElementById("ch_message_insert_emoticon_" + messageId);
+		if (insertEmoticonBtn) {
+			insertEmoticonBtn.remove();
+		}
 	}
 
 	handleAddReaction(data) {

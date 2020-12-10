@@ -410,10 +410,16 @@ class Threads {
 			}
 
 			// Remove the last message date time elements.
-			let lastMessageDateTimeEle = document.getElementById("ch_thread_msg_datetime_" + 
-				this.threadsMessages[this.threadsMessages.length - 1]['id']);
-			if (lastMessageDateTimeEle) {
-				lastMessageDateTimeEle.remove();
+			if (loadMoreMessages && messages.length) {
+				if ( moment(new Date(messages[0].createdAt)).format('DD/MM/YYYY') ==
+					moment(new Date(this.threadsMessages[this.threadsMessages.length - 1].createdAt)).format('DD/MM/YYYY')
+				) {
+					let lastMessageDateTimeEle = document.getElementById("ch_thread_msg_datetime_" + 
+					this.threadsMessages[this.threadsMessages.length - 1]['id']);
+					if (lastMessageDateTimeEle) {
+						lastMessageDateTimeEle.remove();
+					}
+				}
 			}
 
 			this.threadsMessages = this.threadsMessages.concat(messages);
@@ -550,23 +556,21 @@ class Threads {
 	}
 
 	_createParentMessageBubble(message, messagesBox) {
-		
 		let threadStart = document.getElementById("ch_thread_start");
 		if (!threadStart) {
 			// Create message frame
-			this._createMessageBubble(message, messagesBox, false);
+			this._createMessageBubble(message, messagesBox, false, false, false);
 
+			let parentMessage = document.getElementById("thread_" + message.id);
 			// Create a line breaker b/w parent and chid message.
 			let threadStartAttributes = [{"id":"ch_thread_start"},{"class":"ch-thread-start ch-msg-bubble"}];
-			let threadStart = this.utility.createElement("div", threadStartAttributes, null, messagesBox);
+			let threadStart = this.utility.createElement("div", threadStartAttributes, null, parentMessage);
 
 			let threadLineSpanAttributes = [];
 			let threadLineSpan = this.utility.createElement("span", threadLineSpanAttributes, LANGUAGE_PHRASES.START_OF_A_NEW_THREAD, threadStart);
 
-			// Set parent message and line breaker position
-			let parentMessage = document.getElementById("thread_" + message.id);
+			// Set parent message position
 			messagesBox.insertBefore(parentMessage, messagesBox.childNodes[0]);
-			messagesBox.insertBefore(threadStart, messagesBox.childNodes[1]);
 
 			// Add date time on the top of the parent message.
 			let msgDateTimeAttributes = [{"id":"ch_thread_msg_datetime_" + message.id},{"class":"ch-msg-datetime"}];
@@ -1073,7 +1077,7 @@ class Threads {
 		let messagesBox = document.getElementById("ch_thread_messages_box");
 
 		// Create message frame
-		this._createMessageBubble(msgData, messagesBox, false, true);
+		this._createMessageBubble(msgData, messagesBox, false, true, true);
 	}
 
 	addNewMessage(message, newConversation) {
@@ -1115,7 +1119,7 @@ class Threads {
 		message.createdAt = new Date();
 
 		// Create message frame
-		this._createMessageBubble(message, messagesBox, false);
+		this._createMessageBubble(message, messagesBox, true, true, false);
 	}
 
 	_getMessages(conversation, limit, skip, cb) {
@@ -1126,31 +1130,47 @@ class Threads {
 		});
 	}
 
-	_isDateDiffShown(messageId) {
-  	const messageIndex = this.threadsMessages.findIndex(message => message.id == messageId);
+	_isDateDiffShown(currentMsgId, lastMsgId, isNewMessage) {
+  	const messageIndex = this.threadsMessages.findIndex(message => message.id == currentMsgId);
     if (messageIndex == -1) {
     	return false;
+    }
+    const currentMsgDate = moment(new Date(this.threadsMessages[messageIndex].createdAt)).format('DD/MM/YYYY');
+    if (isNewMessage) {
+    	// This in only one message.
+    	if (!lastMsgId) {
+    		return true;
+    	}
+    	const lastMsgIndex = this.threadsMessages.findIndex(message => message.id == lastMsgId);
+	    if (lastMsgIndex == -1) {
+	    	return true;
+	  	}
+	  	const lastMsgDate = moment(new Date(this.threadsMessages[lastMsgIndex].createdAt)).format('DD/MM/YYYY');
+	  	if (currentMsgDate != lastMsgDate) {
+	  		return true;
+			}
+			return false;
     }
 
   	if (!this.threadsMessages[messageIndex + 1]) {
   		return true;
   	}
 
-  	const currentMsgDate = moment(new Date(this.threadsMessages[messageIndex].createdAt)).format('DD/MM/YYYY');
   	const nextMsgDate = moment(new Date(this.threadsMessages[messageIndex + 1].createdAt)).format('DD/MM/YYYY');
-  	
   	if (currentMsgDate != nextMsgDate) {
   		return true;
   	}
-  	return false
+  	return false;
 	}
 
-	_createMessageBubble(message, messagesBox, showDateDiff = true, isPendingMessage = false) {
+	_createMessageBubble(message, messagesBox, showDateDiff = true, isNewMessage = false, isPendingMessage = false) {
 		// Create message list
+		const lastMsgId = messagesBox.lastChild && messagesBox.lastChild.id.replace("thread_", "");
+		
 		let msgBubbleEleAttributes = [{"id":"thread_" + message.id},{"class":"ch-msg-bubble"}];
 		let msgBubbleEle = this.utility.createElement("div", msgBubbleEleAttributes, null, messagesBox);
 
-		if(showDateDiff && this._isDateDiffShown(message.id)) {
+		if(showDateDiff && this._isDateDiffShown(message.id, lastMsgId, isNewMessage)) {
 			let msgDateTimeAttributes = [{"id":"ch_thread_msg_datetime_" + message.id},{"class":"ch-msg-datetime"}];
 			this.utility.createElement("div", msgDateTimeAttributes, this.utility.formatDate(message.createdAt), msgBubbleEle);
 		}
@@ -1182,7 +1202,7 @@ class Threads {
 
 		// Create message more options
 		if ((message.ownerId == this.liveStream.userId) && !message.isDeleted) {
-			let moreOptionAttributes = [{"class":"ch-msg-more-option ch-right"},{"title":LANGUAGE_PHRASES.MORE_OPTIONS}];
+			let moreOptionAttributes = [{"id":"ch_thread_message_more_option_" + message.id},{"class":"ch-msg-more-option ch-right"},{"title":LANGUAGE_PHRASES.MORE_OPTIONS}];
 			let moreOption = this.utility.createElement("i", moreOptionAttributes, "more_vert", msgBubbleEle);
 			moreOption.classList.add("material-icons");
 
@@ -1196,7 +1216,7 @@ class Threads {
 
 		// Create add reaction div.
 		if (this.reactionsSetting.enable && message.ownerId != this.liveStream.userId && !message.isDeleted) {
-			let addReactionEleAttributes = [{"class":"ch-add-reaction-option"},{"title":LANGUAGE_PHRASES.REACT_TO_THIS_MESSAGE}];
+			let addReactionEleAttributes = [{"id":"ch_thread_message_insert_emoticon_" + message.id},{"class":"ch-add-reaction-option"},{"title":LANGUAGE_PHRASES.REACT_TO_THIS_MESSAGE}];
 			let addReactionEle = this.utility.createElement("i", addReactionEleAttributes, "insert_emoticon", msgBubbleEle);
 			addReactionEle.classList.add("material-icons");
 
@@ -1351,17 +1371,23 @@ class Threads {
 			targetAttachmentCard.remove();
 		}
 
-		// Update listener of deleted message
+		// Update more option listener of deleted message
 		let targetMessage = document.getElementById("thread_" + data.messages[0].id);
-		if (targetMessage) {
-			let deletedMsgOptionBtn = targetMessage.lastChild;
-			deletedMsgOptionBtn.addEventListener("click", data => {
+		let moreOptionBtn = document.getElementById("ch_thread_message_more_option_" + data.messages[0].id);
+		if (moreOptionBtn) {
+			moreOptionBtn.addEventListener("click", data => {
 				// Remove delete for everyone option
 				let deleteForEveryoneBtn = document.getElementById("ch_msg_delete_for_everyone");
 				if (deleteForEveryoneBtn) {
 					deleteForEveryoneBtn.remove();
 				}
 			});
+		}
+
+		// Update insert emoticon listener of deleted message
+		let insertEmoticonBtn = document.getElementById("ch_thread_message_insert_emoticon_" + data.messages[0].id);
+		if (insertEmoticonBtn) {
+			insertEmoticonBtn.remove();
 		}
 	}
 
