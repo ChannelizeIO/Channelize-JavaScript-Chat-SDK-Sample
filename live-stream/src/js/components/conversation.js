@@ -1687,39 +1687,35 @@ class Conversation {
 	
 	_isDateDiffShown(currentMsgId, lastMsgId, isNewMessage) {
 		const messageIndex = this.messages.findIndex(message => message.id == currentMsgId);
-	    if (messageIndex == -1) {
-	    	return false;
-	    }
-	    const currentMsgDate = moment(new Date(this.messages[messageIndex].createdAt)).format('DD/MM/YYYY');
-
-	    // Check if this new message
-	    // 1. Yes: this is new entered message.
-	    // 2. No: Means this is came from API.
-	    if (isNewMessage) {
-	    	// This in only one message.
-	    	if (!lastMsgId) {
-	    		return true;
-	    	}
-	    	const lastMsgIndex = this.messages.findIndex(message => message.id == lastMsgId);
-		    if (lastMsgIndex == -1) {
-		    	return true;
-		  	}
-		  	const lastMsgDate = moment(new Date(this.messages[lastMsgIndex].createdAt)).format('DD/MM/YYYY');
-		  	if (currentMsgDate != lastMsgDate) {
-		  		return true;
+    if (messageIndex == -1) {
+    	return false;
+    }
+    const currentMsgDate = moment(new Date(this.messages[messageIndex].createdAt)).format('DD/MM/YYYY');
+    if (isNewMessage) {
+    	// This in only one message.
+    	if (!lastMsgId) {
+    		return true;
+    	}
+    	const lastMsgIndex = this.messages.findIndex(message => message.id == lastMsgId);
+	    if (lastMsgIndex == -1) {
+	    	return true;
+	  	}
+	  	const lastMsgDate = moment(new Date(this.messages[lastMsgIndex].createdAt)).format('DD/MM/YYYY');
+	  	if (currentMsgDate != lastMsgDate) {
+	  		return true;
 			}
 			return false;
-	    }
+    }
 
-	  	if (!this.messages[messageIndex + 1]) {
-	  		return true;
-	  	}
+  	if (!this.messages[messageIndex + 1]) {
+  		return true;
+  	}
 
-	  	const nextMsgDate = moment(new Date(this.messages[messageIndex + 1].createdAt)).format('DD/MM/YYYY');
-	  	if (currentMsgDate != nextMsgDate) {
-	  		return true;
-	  	}
-	  	return false;
+  	const nextMsgDate = moment(new Date(this.messages[messageIndex + 1].createdAt)).format('DD/MM/YYYY');
+  	if (currentMsgDate != nextMsgDate) {
+  		return true;
+  	}
+  	return false;
 	}
 
 	_createMessageBubble(message, messagesBox, isNewMessage = false, isPendingMessage = false) {

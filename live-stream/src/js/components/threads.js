@@ -1131,41 +1131,36 @@ class Threads {
 	}
 
 	_isDateDiffShown(currentMsgId, lastMsgId, isNewMessage) {
-	  	const messageIndex = this.threadsMessages.findIndex(message => message.id == currentMsgId);
-	    if (messageIndex == -1) {
-	    	return false;
-	    }
-	    const currentMsgDate = moment(new Date(this.threadsMessages[messageIndex].createdAt)).format('DD/MM/YYYY');
-
-	    // Check if this new message
-	    // 1. Yes: this is new entered message.
-	    // 2. No: Means this is came from API.
-	    if (isNewMessage) {
-	    	// This in only one message.
-	    	if (!lastMsgId) {
-	    		return true;
-	    	}
-	    	const lastMsgIndex = this.threadsMessages.findIndex(message => message.id == lastMsgId);
-		    if (lastMsgIndex == -1) {
-		    	return true;
-		  	}
-		  	const lastMsgDate = moment(new Date(this.threadsMessages[lastMsgIndex].createdAt)).format('DD/MM/YYYY');
-		  	if (currentMsgDate != lastMsgDate) {
-		  		return true;
+  	const messageIndex = this.threadsMessages.findIndex(message => message.id == currentMsgId);
+    if (messageIndex == -1) {
+    	return false;
+    }
+    const currentMsgDate = moment(new Date(this.threadsMessages[messageIndex].createdAt)).format('DD/MM/YYYY');
+    if (isNewMessage) {
+    	// This in only one message.
+    	if (!lastMsgId) {
+    		return true;
+    	}
+    	const lastMsgIndex = this.threadsMessages.findIndex(message => message.id == lastMsgId);
+	    if (lastMsgIndex == -1) {
+	    	return true;
+	  	}
+	  	const lastMsgDate = moment(new Date(this.threadsMessages[lastMsgIndex].createdAt)).format('DD/MM/YYYY');
+	  	if (currentMsgDate != lastMsgDate) {
+	  		return true;
 			}
 			return false;
-	    }
+    }
 
-	  	if (!this.threadsMessages[messageIndex + 1]) {
-	  		return true;
-	  	}
+  	if (!this.threadsMessages[messageIndex + 1]) {
+  		return true;
+  	}
 
-	  	const nextMsgDate = moment(new Date(this.threadsMessages[messageIndex + 1].createdAt)).format('DD/MM/YYYY');
-	  	
-	  	if (currentMsgDate != nextMsgDate) {
-	  		return true;
-	  	}
-	  	return false;
+  	const nextMsgDate = moment(new Date(this.threadsMessages[messageIndex + 1].createdAt)).format('DD/MM/YYYY');
+  	if (currentMsgDate != nextMsgDate) {
+  		return true;
+  	}
+  	return false;
 	}
 
 	_createMessageBubble(message, messagesBox, showDateDiff = true, isNewMessage = false, isPendingMessage = false) {
